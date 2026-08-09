@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { StatsOverview } from './components/StatsOverview';
 import { MonthlyFlightsChart } from './components/MonthlyFlightsChart';
+import { InteractiveFlightMap } from './components/InteractiveFlightMap';
 import { AircraftColumns } from './components/AircraftColumns';
+import { CuriosityCards } from './components/CuriosityCards';
 import { FlightLogTable } from './components/FlightLogTable';
 import { AddFlightModal } from './components/AddFlightModal';
 import { ImportCsvModal } from './components/ImportCsvModal';
@@ -51,11 +53,17 @@ export default function App() {
         {/* KPI Overview Cards */}
         <StatsOverview flights={flights} />
 
+        {/* Interactive Flight Route Map */}
+        <InteractiveFlightMap flights={flights} />
+
         {/* Chart Section: Line Chart per Year + Total Monthly Bars */}
         <MonthlyFlightsChart flights={flights} isDarkMode={isDarkMode} />
 
         {/* Aircraft 3-Column Section: Specific Models, Grouped Families, Manufacturers */}
         <AircraftColumns flights={flights} />
+
+        {/* Curiosity & Records Cards */}
+        <CuriosityCards flights={flights} />
 
         {/* Flight Log History Table */}
         <FlightLogTable flights={flights} />
@@ -92,3 +100,4 @@ export default function App() {
     </div>
   );
 }
+
