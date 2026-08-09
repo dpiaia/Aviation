@@ -46,6 +46,7 @@ export interface GroupedModelStat {
   count: number;
   percentage: number;
   subModels: { name: string; count: number }[];
+  registrations: string[];
 }
 
 export interface ManufacturerStat {
@@ -53,4 +54,5 @@ export interface ManufacturerStat {
   count: number;
   percentage: number;
   topModel: string;
+  registrations: string[];
 }

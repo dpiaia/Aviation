@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Plane, Clock, Award, Building2 } from 'lucide-react';
 import { Flight } from '../types';
 import { parseDurationMinutes, formatTotalHours } from '../utils/flightAnalytics';
+import { getAirlineLogo } from '../utils/airlineLogos';
 
 interface StatsOverviewProps {
   flights: Flight[];
@@ -113,9 +114,19 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights }) => {
               </div>
 
               <div
-                className={`w-12 h-12 rounded-xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.2)] shrink-0`}
+                className={`w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.15)] shrink-0 overflow-hidden p-1.5`}
               >
-                <IconComponent className="w-5 h-5" />
+                {stat.id === 'top-airline' && stat.value !== 'N/A' ? (
+                  <div className="w-full h-full bg-white rounded flex items-center justify-center p-1">
+                    <img
+                      src={getAirlineLogo(stat.value).logoUrl}
+                      alt={stat.value}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <IconComponent className="w-5 h-5 text-blue-400" />
+                )}
               </div>
             </div>
           </motion.div>

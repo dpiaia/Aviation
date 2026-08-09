@@ -13,6 +13,8 @@ import {
   Armchair,
   PlaneTakeoff,
   Ticket,
+  Waypoints,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { Flight } from '../types';
 import {
@@ -20,6 +22,7 @@ import {
   computeFlightRecords,
   computeAircraftAgeStats,
   computeExtraCuriosities,
+  computeTopRoutes,
 } from '../utils/aircraftRegistrationData';
 import { PlanespottersPhoto } from './PlanespottersPhoto';
 import { getAirlineLogo } from '../utils/airlineLogos';
@@ -33,6 +36,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights }) => {
   const flightRecords = computeFlightRecords(flights);
   const aircraftAges = computeAircraftAgeStats(flights);
   const extraCuriosities = computeExtraCuriosities(flights);
+  const topRoutes = computeTopRoutes(flights);
 
   return (
     <section className="mb-12 space-y-10">
@@ -198,12 +202,150 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights }) => {
         </div>
       </div>
 
-      {/* ROW 2: Flight Records */}
+      {/* ROW 2: Top 3 Most Frequent Routes */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center gap-2">
+          <Waypoints className="w-4 h-4 text-[#EC6726]" />
+          <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider font-mono">
+            2. As 3 Rotas Mais Frequentes (Trajetos Mais Voados)
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {topRoutes.map((route, idx) => {
+            const logo = getAirlineLogo(route.primaryAirline);
+
+            return (
+              <motion.div
+                key={route.routeKey}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: idx * 0.1 }}
+                className="bg-white rounded-2xl shadow-xl overflow-hidden text-slate-900 border border-slate-200 flex flex-col justify-between relative group hover:shadow-2xl transition-all duration-300"
+              >
+                {/* Decorative Ticket Stub Notches */}
+                <div className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-950 border border-slate-800 z-20" />
+                <div className="absolute -right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-950 border border-slate-800 z-20" />
+
+                <div>
+                  {/* Top Ticket Header Banner */}
+                  <div className="bg-slate-900 text-white p-3 flex items-center justify-between border-b border-slate-800">
+                    <span className="text-xs font-mono font-extrabold bg-[#EC6726] text-white px-2.5 py-0.5 rounded shadow flex items-center gap-1">
+                      #{idx + 1} ROTA
+                    </span>
+                    <span className="text-xs font-mono text-slate-300 font-bold">
+                      {route.percentage}% de todos os voos
+                    </span>
+                  </div>
+
+                  {/* Route Visual Display */}
+                  <div className="p-5 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white space-y-3 relative overflow-hidden">
+                    <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-[#EC6726]/10 rounded-full blur-2xl pointer-events-none" />
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-center">
+                        <span className="text-3xl font-black font-mono tracking-tight text-white block">
+                          {route.fromIata}
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-medium truncate max-w-[90px] block">
+                          {route.fromCity.split(',')[0]}
+                        </span>
+                      </div>
+
+                      <div className="flex-1 px-3 flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-1 text-[#EC6726] font-mono text-xs font-bold mb-1">
+                          <span>{route.count} voos</span>
+                        </div>
+                        <div className="w-full flex items-center gap-1">
+                          <div className="h-0.5 flex-1 bg-slate-700 rounded-full" />
+                          <PlaneTakeoff className="w-4 h-4 text-[#EC6726] transform rotate-90 shrink-0" />
+                          <div className="h-0.5 flex-1 bg-slate-700 rounded-full" />
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-400 mt-1">
+                          {route.distanceKm} km
+                        </span>
+                      </div>
+
+                      <div className="text-center">
+                        <span className="text-3xl font-black font-mono tracking-tight text-white block">
+                          {route.toIata}
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-medium truncate max-w-[90px] block">
+                          {route.toCity.split(',')[0]}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Route Details */}
+                  <div className="p-4 space-y-3">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-2 text-xs">
+                      <div className="flex items-center justify-between text-slate-600">
+                        <span className="font-mono text-[11px] font-semibold text-slate-500">
+                          Ida & Volta (Sentidos agregados):
+                        </span>
+                        <strong className="font-mono font-bold text-slate-900 bg-slate-200/80 px-2 py-0.5 rounded">
+                          {route.bidirectionalCount} voos
+                        </strong>
+                      </div>
+
+                      <div className="flex items-center justify-between text-slate-600 pt-1.5 border-t border-slate-200/60">
+                        <span className="font-mono text-[11px] font-semibold text-slate-500">
+                          Companhia Principal:
+                        </span>
+                        <div className="flex items-center gap-1.5 font-bold text-slate-800">
+                          <div
+                            className="w-4 h-4 rounded flex items-center justify-center p-0.5"
+                            style={{ backgroundColor: logo.brandColor }}
+                          >
+                            <img
+                              src={logo.logoUrl}
+                              alt={route.primaryAirline}
+                              referrerPolicy="no-referrer"
+                              className="max-h-full max-w-full object-contain filter brightness-110"
+                            />
+                          </div>
+                          <span>{logo.shortName}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-slate-600 pt-1.5 border-t border-slate-200/60">
+                        <span className="font-mono text-[11px] font-semibold text-slate-500">
+                          Última Operação:
+                        </span>
+                        <span className="font-mono text-slate-700 font-semibold">
+                          {route.lastFlightDate}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Barcode */}
+                <div className="bg-slate-50 p-3 border-t border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center gap-1 opacity-70">
+                    <div className="w-0.5 h-5 bg-slate-900" />
+                    <div className="w-1.5 h-5 bg-slate-900" />
+                    <div className="w-0.5 h-5 bg-slate-900" />
+                    <div className="w-1 h-5 bg-slate-900" />
+                    <div className="w-2 h-5 bg-slate-900" />
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold">
+                    MOST FREQUENT ROUTE
+                  </span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ROW 3: Flight Records */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
           <Compass className="w-4 h-4 text-blue-400" />
           <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider font-mono">
-            2. Recordes de Voo (Mais Longo Internacional, Nacional e Mais Curto)
+            3. Recordes de Voo (Mais Longo, Nacional e Mais Curto)
           </h3>
         </div>
 

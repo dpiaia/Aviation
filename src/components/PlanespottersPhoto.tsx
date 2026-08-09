@@ -15,19 +15,41 @@ function getFallbackImage(aircraftModel: string = '', airline: string = ''): str
   const modelLower = aircraftModel.toLowerCase();
   const airlineLower = airline.toLowerCase();
 
-  if (modelLower.includes('e195-e2') || modelLower.includes('e295') || modelLower.includes('ps-ae')) {
+  if (
+    modelLower.includes('atr') ||
+    modelLower.includes('at76') ||
+    modelLower.includes('at72')
+  ) {
+    return 'https://upload.wikimedia.org/wikipedia/commons/9/9e/ATR_72-600_%28Azul%29_Rafael_Luiz_%2830204149731%29.jpg';
+  }
+  if (
+    modelLower.includes('e195-e2') ||
+    modelLower.includes('e295') ||
+    modelLower.includes('ps-ae')
+  ) {
     return 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80';
   }
-  if (modelLower.includes('e195') || modelLower.includes('erj') || modelLower.includes('e190')) {
+  if (
+    modelLower.includes('e195') ||
+    modelLower.includes('erj') ||
+    modelLower.includes('e190') ||
+    modelLower.includes('embraer')
+  ) {
     return 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80';
   }
-  if (modelLower.includes('atr')) {
-    return 'https://images.unsplash.com/photo-1556388158-158ea5ccacbd?auto=format&fit=crop&w=800&q=80';
-  }
-  if (modelLower.includes('a320') || modelLower.includes('airbus')) {
+  if (
+    modelLower.includes('a320') ||
+    modelLower.includes('a321') ||
+    modelLower.includes('a319') ||
+    modelLower.includes('airbus')
+  ) {
     return 'https://images.unsplash.com/photo-1520437358207-323b43b50729?auto=format&fit=crop&w=800&q=80';
   }
-  if (modelLower.includes('737') || modelLower.includes('boeing')) {
+  if (
+    modelLower.includes('737') ||
+    modelLower.includes('787') ||
+    modelLower.includes('boeing')
+  ) {
     return 'https://images.unsplash.com/photo-1544016768-982d1554c0b7?auto=format&fit=crop&w=800&q=80';
   }
   if (airlineLower.includes('azul')) {

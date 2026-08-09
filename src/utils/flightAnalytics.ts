@@ -101,10 +101,13 @@ export function getGroupedFamily(specificCleanName: string): {
   description: string;
   manufacturer: string;
 } {
+  const name = specificCleanName.toUpperCase();
   if (
-    specificCleanName.includes('E195') ||
-    specificCleanName.includes('ERJ-190') ||
-    specificCleanName.includes('E-Jets')
+    name.includes('E195') ||
+    name.includes('E190') ||
+    name.includes('ERJ') ||
+    name.includes('E-JETS') ||
+    name.includes('EMBRAER')
   ) {
     return {
       familyName: 'Embraer E-Jets (E190/E195/E2)',
@@ -112,7 +115,7 @@ export function getGroupedFamily(specificCleanName: string): {
       manufacturer: 'Embraer',
     };
   }
-  if (specificCleanName.includes('ATR')) {
+  if (name.includes('ATR')) {
     return {
       familyName: 'Família ATR 72',
       description: 'ATR 72-600',
@@ -273,6 +276,7 @@ export function computeGroupedModelStats(flights: Flight[]): GroupedModelStat[] 
       manufacturer: string;
       count: number;
       subModelCounts: Map<string, number>;
+      registrations: Set<string>;
     }
   >();
 
@@ -286,12 +290,14 @@ export function computeGroupedModelStats(flights: Flight[]): GroupedModelStat[] 
         manufacturer,
         count: 0,
         subModelCounts: new Map<string, number>(),
+        registrations: new Set<string>(),
       });
     }
 
     const item = map.get(familyName)!;
     item.count += 1;
     item.subModelCounts.set(cleanName, (item.subModelCounts.get(cleanName) || 0) + 1);
+    if (f.registration) item.registrations.add(f.registration);
   });
 
   const result: GroupedModelStat[] = [];
@@ -309,6 +315,7 @@ export function computeGroupedModelStats(flights: Flight[]): GroupedModelStat[] 
       count: value.count,
       percentage: Number(((value.count / total) * 100).toFixed(1)),
       subModels,
+      registrations: Array.from(value.registrations),
     });
   });
 
@@ -323,6 +330,7 @@ export function computeManufacturerStats(flights: Flight[]): ManufacturerStat[] 
     {
       count: number;
       modelCounts: Map<string, number>;
+      registrations: Set<string>;
     }
   >();
 
@@ -333,12 +341,14 @@ export function computeManufacturerStats(flights: Flight[]): ManufacturerStat[] 
       map.set(manufacturer, {
         count: 0,
         modelCounts: new Map<string, number>(),
+        registrations: new Set<string>(),
       });
     }
 
     const item = map.get(manufacturer)!;
     item.count += 1;
     item.modelCounts.set(cleanName, (item.modelCounts.get(cleanName) || 0) + 1);
+    if (f.registration) item.registrations.add(f.registration);
   });
 
   const result: ManufacturerStat[] = [];
@@ -357,6 +367,7 @@ export function computeManufacturerStats(flights: Flight[]): ManufacturerStat[] 
       count: value.count,
       percentage: Number(((value.count / total) * 100).toFixed(1)),
       topModel,
+      registrations: Array.from(value.registrations),
     });
   });
 

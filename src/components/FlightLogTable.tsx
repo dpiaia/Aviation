@@ -12,6 +12,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { Flight } from '../types';
+import { getAirlineLogo } from '../utils/airlineLogos';
 
 interface FlightLogTableProps {
   flights: Flight[];
@@ -200,7 +201,29 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights }) => {
 
                   {/* Airline */}
                   <td className="py-3 px-3 text-slate-300 whitespace-nowrap">
-                    {f.airline ? f.airline.split('(')[0].trim() : '-'}
+                    {f.airline ? (
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const logo = getAirlineLogo(f.airline);
+                          return (
+                            <>
+                              <div className="w-5 h-5 rounded bg-white p-0.5 flex items-center justify-center shrink-0 shadow-sm border border-slate-200/20">
+                                <img
+                                  src={logo.logoUrl}
+                                  alt={logo.shortName}
+                                  className="max-h-full max-w-full object-contain"
+                                />
+                              </div>
+                              <span className="font-medium text-slate-200">
+                                {f.airline.split('(')[0].trim()}
+                              </span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    ) : (
+                      '-'
+                    )}
                   </td>
 
                   {/* Aircraft & Registration */}

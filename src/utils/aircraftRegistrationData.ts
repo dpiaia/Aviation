@@ -242,7 +242,7 @@ export function computeFlightRecords(flights: Flight[]): FlightRecordStat[] {
 
   return [
     {
-      title: 'Voo Mais Longo Internacional',
+      title: intlFlights.length > 0 ? 'Voo Mais Longo Internacional' : 'Voo Mais Longo Realizado',
       category: 'longest_intl',
       flight: longestIntl.flight,
       distanceKm: longestIntl.dist,
@@ -430,4 +430,104 @@ export function computeExtraCuriosities(flights: Flight[]): ExtraCuriositiesStat
       seatPreference: 'Janela (A/F)',
     },
   };
+}
+
+export interface TopRouteStat {
+  routeKey: string;
+  fromIata: string;
+  toIata: string;
+  fromCity: string;
+  toCity: string;
+  fromName: string;
+  toName: string;
+  count: number;
+  bidirectionalCount: number;
+  percentage: number;
+  distanceKm: number;
+  primaryAirline: string;
+  lastFlightDate: string;
+}
+
+export function computeTopRoutes(flights: Flight[]): TopRouteStat[] {
+  if (flights.length === 0) return [];
+
+  const routeMap = new Map<string, {
+    fromIata: string;
+    toIata: string;
+    fromCity: string;
+    toCity: string;
+    fromName: string;
+    toName: string;
+    count: number;
+    distanceKm: number;
+    airlines: Map<string, number>;
+    dates: string[];
+  }>();
+
+  flights.forEach((f) => {
+    const fromLoc = parseAirport(f.from);
+    const toLoc = parseAirport(f.to);
+    const key = `${fromLoc.iata}-${toLoc.iata}`;
+
+    if (!routeMap.has(key)) {
+      const dist = calculateDistanceKm(fromLoc.lat, fromLoc.lng, toLoc.lat, toLoc.lng);
+      routeMap.set(key, {
+        fromIata: fromLoc.iata,
+        toIata: toLoc.iata,
+        fromCity: fromLoc.city,
+        toCity: toLoc.city,
+        fromName: fromLoc.name,
+        toName: toLoc.name,
+        count: 0,
+        distanceKm: dist,
+        airlines: new Map(),
+        dates: [],
+      });
+    }
+
+    const entry = routeMap.get(key)!;
+    entry.count += 1;
+    if (f.date) entry.dates.push(f.date);
+
+    const airlineClean = (f.airline || 'Desconhecida').split('(')[0].trim();
+    entry.airlines.set(airlineClean, (entry.airlines.get(airlineClean) || 0) + 1);
+  });
+
+  const totalFlights = flights.length;
+  const sorted = Array.from(routeMap.values()).sort((a, b) => b.count - a.count);
+
+  return sorted.slice(0, 3).map((item) => {
+    const reverseKey = `${item.toIata}-${item.fromIata}`;
+    const reverseEntry = routeMap.get(reverseKey);
+    const reverseCount = reverseEntry ? reverseEntry.count : 0;
+    const bidirectionalCount = item.count + reverseCount;
+
+    let topAirline = 'Azul';
+    let maxA = 0;
+    item.airlines.forEach((cnt, name) => {
+      if (cnt > maxA) {
+        maxA = cnt;
+        topAirline = name;
+      }
+    });
+
+    item.dates.sort();
+    const lastDate = item.dates.length > 0 ? item.dates[item.dates.length - 1] : '-';
+
+    return {
+      routeKey: `${item.fromIata}-${item.toIata}`,
+      fromIata: item.fromIata,
+      toIata: item.toIata,
+      fromCity: item.fromCity,
+      toCity: item.toCity,
+      fromName: item.fromName,
+      toName: item.toName,
+      count: item.count,
+      bidirectionalCount,
+      percentage: Math.round((item.count / totalFlights) * 1000) / 10,
+      distanceKm: item.distanceKm,
+      primaryAirline: topAirline,
+      lastFlightDate: lastDate,
+    };
+  });
 }
