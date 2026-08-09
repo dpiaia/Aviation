@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { motion, AnimatePresence } from 'motion/react';
-import { Map, Plane, Navigation, Filter, RotateCcw, Info, Calendar, Building2, Check, ArrowRight } from 'lucide-react';
+import { Map as MapIcon, Plane, Navigation, Filter, RotateCcw, Info, Calendar, Building2, Check, ArrowRight } from 'lucide-react';
 import { Flight } from '../types';
 import { parseAirport, AirportLocation } from '../utils/airportCoordinates';
 
@@ -311,7 +311,7 @@ export function InteractiveFlightMap({ flights }: InteractiveFlightMapProps) {
         <div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
-              <Map className="w-4 h-4" />
+              <MapIcon className="w-4 h-4" />
             </div>
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               Mapa Interativo de Rotas e Trajetos
