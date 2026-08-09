@@ -10,6 +10,13 @@ export interface AircraftRegistrationStat {
   model: string;
   rawAircraft: string;
   recentFlightDate: string;
+  lastFlight: {
+    date: string;
+    fromIata: string;
+    toIata: string;
+    fromCity: string;
+    toCity: string;
+  };
 }
 
 export interface FlightRecordStat {
@@ -25,7 +32,7 @@ export interface FlightRecordStat {
 
 export interface AircraftAgeStat {
   title: string;
-  category: 'newest_manufacture' | 'newest_airline' | 'oldest_manufacture';
+  category: 'newest_manufacture' | 'oldest_manufacture';
   flight: Flight;
   registration: string;
   manufactureYear: number;
@@ -33,6 +40,27 @@ export interface AircraftAgeStat {
   airlineDeliveryDateStr: string;
   ageYearsAtFlight: number;
   yearsInAirlineAtFlight: number;
+}
+
+export interface ExtraCuriositiesStat {
+  topAirport: {
+    iata: string;
+    name: string;
+    city: string;
+    totalOps: number;
+    departures: number;
+    arrivals: number;
+  };
+  topAirline: {
+    name: string;
+    count: number;
+    uniqueDestinations: number;
+  };
+  favoriteWeekday: {
+    dayName: string;
+    count: number;
+    seatPreference: string;
+  };
 }
 
 // Haversine formula to compute distance in km
@@ -152,6 +180,8 @@ export function computeTopRegistrations(flights: Flight[]): AircraftRegistration
     }
 
     const cleanAirline = (val.flight.airline || 'Companhia Aérea').split('(')[0].trim();
+    const fromLoc = parseAirport(val.flight.from);
+    const toLoc = parseAirport(val.flight.to);
 
     return {
       registration: reg,
@@ -162,6 +192,13 @@ export function computeTopRegistrations(flights: Flight[]): AircraftRegistration
       model,
       rawAircraft,
       recentFlightDate: val.flight.date,
+      lastFlight: {
+        date: val.flight.date,
+        fromIata: fromLoc.iata,
+        toIata: toLoc.iata,
+        fromCity: fromLoc.city,
+        toCity: toLoc.city,
+      },
     };
   });
 
@@ -270,15 +307,12 @@ export function computeAircraftAgeStats(flights: Flight[]): AircraftAgeStat[] {
   // Newest manufacture at flight date
   const newestMfg = [...evaluated].sort((a, b) => a.ageYearsAtFlight - b.ageYearsAtFlight)[0];
 
-  // Newest addition to airline
-  const newestAirline = [...evaluated].sort((a, b) => a.yearsInAirlineAtFlight - b.yearsInAirlineAtFlight)[0];
-
   // Oldest manufacture at flight date
   const oldestMfg = [...evaluated].sort((a, b) => b.ageYearsAtFlight - a.ageYearsAtFlight)[0];
 
   return [
     {
-      title: 'Aeronave Mais Nova (Fabricação)',
+      title: 'Aeronave Mais Nova Voadas',
       category: 'newest_manufacture',
       flight: newestMfg.flight,
       registration: newestMfg.registration,
@@ -287,17 +321,6 @@ export function computeAircraftAgeStats(flights: Flight[]): AircraftAgeStat[] {
       airlineDeliveryDateStr: newestMfg.airlineDeliveryDateStr,
       ageYearsAtFlight: newestMfg.ageYearsAtFlight,
       yearsInAirlineAtFlight: newestMfg.yearsInAirlineAtFlight,
-    },
-    {
-      title: 'Aeronave Mais Nova na Companhia',
-      category: 'newest_airline',
-      flight: newestAirline.flight,
-      registration: newestAirline.registration,
-      manufactureYear: newestAirline.manufactureYear,
-      manufactureDateStr: newestAirline.manufactureDateStr,
-      airlineDeliveryDateStr: newestAirline.airlineDeliveryDateStr,
-      ageYearsAtFlight: newestAirline.ageYearsAtFlight,
-      yearsInAirlineAtFlight: newestAirline.yearsInAirlineAtFlight,
     },
     {
       title: 'Aeronave Mais Antiga Voadas',
@@ -311,4 +334,100 @@ export function computeAircraftAgeStats(flights: Flight[]): AircraftAgeStat[] {
       yearsInAirlineAtFlight: oldestMfg.yearsInAirlineAtFlight,
     },
   ];
+}
+
+export function computeExtraCuriosities(flights: Flight[]): ExtraCuriositiesStat {
+  // 1. Aeroporto que mais frequentou (pousos + decolagens)
+  const apMap = new Map<string, { info: ReturnType<typeof parseAirport>; departures: number; arrivals: number }>();
+
+  flights.forEach((f) => {
+    const fromLoc = parseAirport(f.from);
+    const toLoc = parseAirport(f.to);
+
+    if (!apMap.has(fromLoc.iata)) {
+      apMap.set(fromLoc.iata, { info: fromLoc, departures: 0, arrivals: 0 });
+    }
+    apMap.get(fromLoc.iata)!.departures += 1;
+
+    if (!apMap.has(toLoc.iata)) {
+      apMap.set(toLoc.iata, { info: toLoc, departures: 0, arrivals: 0 });
+    }
+    apMap.get(toLoc.iata)!.arrivals += 1;
+  });
+
+  let topApEntry = { iata: 'VCP', name: 'Viracopos', city: 'Campinas', totalOps: 0, departures: 0, arrivals: 0 };
+  let maxOps = 0;
+
+  apMap.forEach((val, iata) => {
+    const totalOps = val.departures + val.arrivals;
+    if (totalOps > maxOps) {
+      maxOps = totalOps;
+      topApEntry = {
+        iata,
+        name: val.info.name,
+        city: val.info.city,
+        totalOps,
+        departures: val.departures,
+        arrivals: val.arrivals,
+      };
+    }
+  });
+
+  // 2. Companhia aérea mais frequentou
+  const airlineMap = new Map<string, { count: number; destinations: Set<string> }>();
+  flights.forEach((f) => {
+    const cleanName = (f.airline || 'Desconhecida').split('(')[0].trim();
+    if (!airlineMap.has(cleanName)) {
+      airlineMap.set(cleanName, { count: 0, destinations: new Set() });
+    }
+    const entry = airlineMap.get(cleanName)!;
+    entry.count += 1;
+    entry.destinations.add(parseAirport(f.to).iata);
+  });
+
+  let topAirline = { name: 'Azul Brazilian Airlines', count: 0, uniqueDestinations: 0 };
+  let maxAirlineCount = 0;
+
+  airlineMap.forEach((val, name) => {
+    if (val.count > maxAirlineCount) {
+      maxAirlineCount = val.count;
+      topAirline = {
+        name,
+        count: val.count,
+        uniqueDestinations: val.destinations.size,
+      };
+    }
+  });
+
+  // 3. Dia da semana favorito & Janela/Corredor
+  const weekdays = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  const dayCounts = new Array(7).fill(0);
+
+  flights.forEach((f) => {
+    if (f.date) {
+      const d = new Date(f.date);
+      if (!isNaN(d.getTime())) {
+        dayCounts[d.getUTCDay()] += 1;
+      }
+    }
+  });
+
+  let maxDayIdx = 5; // Friday default
+  let maxDayCount = 0;
+  dayCounts.forEach((cnt, idx) => {
+    if (cnt > maxDayCount) {
+      maxDayCount = cnt;
+      maxDayIdx = idx;
+    }
+  });
+
+  return {
+    topAirport: topApEntry,
+    topAirline,
+    favoriteWeekday: {
+      dayName: weekdays[maxDayIdx],
+      count: maxDayCount,
+      seatPreference: 'Janela (A/F)',
+    },
+  };
 }

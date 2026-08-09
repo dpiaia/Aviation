@@ -45,6 +45,12 @@ export const AIRPORT_COORDINATES: Record<string, AirportLocation> = {
   MIA: { iata: 'MIA', name: 'Miami International', city: 'Miami, EUA', lat: 25.7959, lng: -80.2870 },
   EZE: { iata: 'EZE', name: 'Buenos Aires / Ezeiza', city: 'Buenos Aires, Argentina', lat: -34.8222, lng: -58.5358 },
   SCL: { iata: 'SCL', name: 'Santiago / Arturo Merino Benítez', city: 'Santiago, Chile', lat: -33.3930, lng: -70.7858 },
+  JFK: { iata: 'JFK', name: 'New York / John F. Kennedy', city: 'Nova York, EUA', lat: 40.6413, lng: -73.7781 },
+  CDG: { iata: 'CDG', name: 'Paris / Charles de Gaulle', city: 'Paris, França', lat: 49.0097, lng: 2.5479 },
+  LHR: { iata: 'LHR', name: 'Londres / Heathrow', city: 'Londres, Reino Unido', lat: 51.4700, lng: -0.4543 },
+  CUN: { iata: 'CUN', name: 'Cancún International', city: 'Cancún, México', lat: 21.0365, lng: -86.8771 },
+  BOG: { iata: 'BOG', name: 'Bogotá / El Dorado', city: 'Bogotá, Colômbia', lat: 4.7016, lng: -74.1469 },
+  PTY: { iata: 'PTY', name: 'Panamá / Tocumen', city: 'Cidade do Panamá, Panamá', lat: 9.0714, lng: -79.3835 },
 };
 
 export function parseAirport(rawStr: string): AirportLocation {

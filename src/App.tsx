@@ -8,6 +8,7 @@ import { CuriosityCards } from './components/CuriosityCards';
 import { FlightLogTable } from './components/FlightLogTable';
 import { AddFlightModal } from './components/AddFlightModal';
 import { ImportCsvModal } from './components/ImportCsvModal';
+import { DottedWorldMapBackground } from './components/DottedWorldMapBackground';
 import { INITIAL_FLIGHTS } from './data/initialFlights';
 import { Flight } from './types';
 
@@ -36,8 +37,8 @@ export default function App() {
 
   return (
     <div className={`min-h-screen bg-[#020617] text-slate-100 font-sans selection:bg-blue-500/30 selection:text-blue-200 transition-colors duration-300 relative overflow-x-hidden`}>
-      {/* Background ambient glow */}
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-950/80 to-[#020617]" />
+      {/* Subtle Dotted World Map Background with Light Flying Beams */}
+      <DottedWorldMapBackground />
 
       {/* App Navigation Header */}
       <Header

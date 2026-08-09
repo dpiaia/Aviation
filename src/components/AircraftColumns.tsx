@@ -18,6 +18,7 @@ import {
   computeGroupedModelStats,
   computeManufacturerStats,
 } from '../utils/flightAnalytics';
+import { PlanespottersPhoto } from './PlanespottersPhoto';
 
 interface AircraftColumnsProps {
   flights: Flight[];
@@ -136,20 +137,16 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                 </div>
 
                 {/* Model Photo Banner */}
-                <div className="relative h-36 w-full rounded-xl overflow-hidden border border-blue-500/30 mb-4 group shadow-md">
-                  <img
-                    src={getAircraftPhoto(top1Specific.modelName, 'model')}
-                    alt={top1Specific.modelName}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                <div className="relative mb-4">
+                  <PlanespottersPhoto
+                    registration={top1Specific.topRegistration || 'PR-AXD'}
+                    aircraftModel={top1Specific.modelName}
+                    airline={top1Specific.manufacturer}
+                    badgeColor="blue"
+                    badgeLabel="Foto Modelo"
+                    className="h-36 w-full"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-blue-400/30 text-[10px] font-mono font-bold text-blue-300 flex items-center gap-1">
-                    <Camera className="w-3 h-3 text-blue-400" /> Foto do Modelo
-                  </div>
-
-                  <div className="absolute bottom-2 left-3 right-3">
+                  <div className="absolute bottom-2 left-3 right-3 pointer-events-none z-10">
                     <span className="text-[10px] text-blue-300 uppercase tracking-widest font-mono font-bold">
                       {top1Specific.manufacturer}
                     </span>
@@ -241,20 +238,16 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                 </div>
 
                 {/* Family Photo Banner */}
-                <div className="relative h-36 w-full rounded-xl overflow-hidden border border-amber-500/30 mb-4 group shadow-md">
-                  <img
-                    src={getAircraftPhoto(top1Grouped.familyGroup, 'family')}
-                    alt={top1Grouped.familyGroup}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                <div className="relative mb-4">
+                  <PlanespottersPhoto
+                    registration="PS-AER"
+                    aircraftModel={top1Grouped.familyGroup}
+                    airline={top1Grouped.manufacturer}
+                    badgeColor="amber"
+                    badgeLabel="Foto Família"
+                    className="h-36 w-full"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-amber-400/30 text-[10px] font-mono font-bold text-amber-300 flex items-center gap-1">
-                    <Camera className="w-3 h-3 text-amber-400" /> Foto da Família
-                  </div>
-
-                  <div className="absolute bottom-2 left-3 right-3">
+                  <div className="absolute bottom-2 left-3 right-3 pointer-events-none z-10">
                     <span className="text-[10px] text-amber-300 uppercase tracking-widest font-mono font-bold">
                       {top1Grouped.manufacturer}
                     </span>
@@ -348,20 +341,16 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                 </div>
 
                 {/* Manufacturer Photo Banner */}
-                <div className="relative h-36 w-full rounded-xl overflow-hidden border border-cyan-500/30 mb-4 group shadow-md">
-                  <img
-                    src={getAircraftPhoto(top1Manufacturer.name, 'manufacturer')}
-                    alt={top1Manufacturer.name}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                <div className="relative mb-4">
+                  <PlanespottersPhoto
+                    registration="PR-YRA"
+                    aircraftModel={top1Manufacturer.topModel || top1Manufacturer.name}
+                    airline={top1Manufacturer.name}
+                    badgeColor="cyan"
+                    badgeLabel="Foto Indústria"
+                    className="h-36 w-full"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
-
-                  <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-md border border-cyan-400/30 text-[10px] font-mono font-bold text-cyan-300 flex items-center gap-1">
-                    <Camera className="w-3 h-3 text-cyan-400" /> Foto da Indústria
-                  </div>
-
-                  <div className="absolute bottom-2 left-3 right-3">
+                  <div className="absolute bottom-2 left-3 right-3 pointer-events-none z-10">
                     <span className="text-[10px] text-cyan-300 uppercase tracking-widest font-mono font-bold">
                       Indústria Aeronáutica
                     </span>

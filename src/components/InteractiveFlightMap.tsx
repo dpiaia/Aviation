@@ -278,7 +278,7 @@ export function InteractiveFlightMap({ flights }: InteractiveFlightMapProps) {
 
     // Fit Map Bounds
     if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
     }
   }, [airportsMap, routeStatsList, activeRoute, selectedAirportIata, mapMode]);
 
@@ -291,7 +291,7 @@ export function InteractiveFlightMap({ flights }: InteractiveFlightMapProps) {
       const bounds = L.latLngBounds([]);
       airportsMap.forEach((ap) => bounds.extend([ap.info.lat, ap.info.lng]));
       if (bounds.isValid()) {
-        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
+        mapInstanceRef.current.fitBounds(bounds, { padding: [30, 30], maxZoom: 6 });
       }
     }
   };
