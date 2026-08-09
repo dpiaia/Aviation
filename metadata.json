@@ -1,0 +1,6 @@
+{
+  "name": "Aviation Diary",
+  "description": "Dashboard interativo de diário de voos com estatísticas de aeronaves, fabricantes e distribuição mensal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
