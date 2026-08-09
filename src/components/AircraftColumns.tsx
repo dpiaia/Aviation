@@ -144,6 +144,7 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                     airline={top1Specific.manufacturer}
                     badgeColor="blue"
                     badgeLabel="Foto Modelo"
+                    photoIndex={0}
                     className="h-36 w-full"
                   />
                   <div className="absolute bottom-2 left-3 right-3 pointer-events-none z-10">
@@ -245,6 +246,7 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                     airline={top1Grouped.manufacturer}
                     badgeColor="amber"
                     badgeLabel="Foto Família"
+                    photoIndex={1}
                     className="h-36 w-full"
                   />
                   <div className="absolute bottom-2 left-3 right-3 pointer-events-none z-10">
@@ -348,6 +350,7 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                     airline={top1Manufacturer.name}
                     badgeColor="cyan"
                     badgeLabel="Foto Indústria"
+                    photoIndex={2}
                     className="h-36 w-full"
                   />
                   <div className="absolute bottom-2 left-3 right-3 pointer-events-none z-10">

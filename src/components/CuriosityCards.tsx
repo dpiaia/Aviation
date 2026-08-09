@@ -29,9 +29,10 @@ import { getAirlineLogo } from '../utils/airlineLogos';
 
 interface CuriosityCardsProps {
   flights: Flight[];
+  onSelectAirport?: (airport: string) => void;
 }
 
-export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights }) => {
+export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelectAirport }) => {
   const topRegistrations = computeTopRegistrations(flights);
   const flightRecords = computeFlightRecords(flights);
   const aircraftAges = computeAircraftAgeStats(flights);
@@ -119,6 +120,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights }) => {
                       airline={item.airline}
                       badgeColor="amber"
                       badgeLabel={`#${idx + 1} Prefixo`}
+                      photoIndex={idx}
                       className="h-44 w-full shadow-md rounded-xl"
                     />
                   </div>
@@ -403,6 +405,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights }) => {
                       airline={rec.flight.airline}
                       badgeColor={idx === 0 ? 'rose' : idx === 1 ? 'emerald' : 'cyan'}
                       badgeLabel={rec.title}
+                      photoIndex={idx + 1}
                       className="h-44 w-full shadow-md rounded-xl"
                     />
                   </div>
@@ -539,6 +542,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights }) => {
                       airline={age.flight.airline}
                       badgeColor={badgeTheme.color}
                       badgeLabel={badgeTheme.label}
+                      photoIndex={idx + 2}
                       className="h-48 w-full shadow-md rounded-xl"
                     />
                   </div>

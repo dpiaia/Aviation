@@ -8,55 +8,97 @@ interface PlanespottersPhotoProps {
   className?: string;
   badgeLabel?: string;
   badgeColor?: 'blue' | 'amber' | 'emerald' | 'cyan' | 'rose';
+  photoIndex?: number;
 }
 
-// Fallback high-quality aviation imagery mapped by model/airline keywords
-function getFallbackImage(aircraftModel: string = '', airline: string = ''): string {
+// Fallback high-quality aviation imagery mapped by model/airline keywords with multi-photo variety pools
+const FALLBACK_POOLS = {
+  atr: [
+    'https://upload.wikimedia.org/wikipedia/commons/9/9e/ATR_72-600_%28Azul%29_Rafael_Luiz_%2830204149731%29.jpg',
+    'https://upload.wikimedia.org/wikipedia/commons/2/23/PR-TQI_ATR.72-212A_ATR_Azul_Linhas_A%C3%A9reas_Brasileiras_%2835940989063%29.jpg',
+    'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1520437358207-323b43b50729?auto=format&fit=crop&w=800&q=80',
+  ],
+  embraerE2: [
+    'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
+  ],
+  embraerE1: [
+    'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
+  ],
+  airbus: [
+    'https://images.unsplash.com/photo-1520437358207-323b43b50729?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&w=800&q=80',
+  ],
+  boeing: [
+    'https://images.unsplash.com/photo-1544016768-982d1554c0b7?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583508915901-b5f84c1dcde1?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1559297434-fae8a1916a79?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1570710891163-6d3b5c47248b?auto=format&fit=crop&w=800&q=80',
+  ],
+  default: [
+    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
+  ],
+};
+
+function getFallbackImage(
+  aircraftModel: string = '',
+  airline: string = '',
+  index: number = 0
+): string {
   const modelLower = aircraftModel.toLowerCase();
   const airlineLower = airline.toLowerCase();
+
+  let pool = FALLBACK_POOLS.default;
 
   if (
     modelLower.includes('atr') ||
     modelLower.includes('at76') ||
     modelLower.includes('at72')
   ) {
-    return 'https://upload.wikimedia.org/wikipedia/commons/9/9e/ATR_72-600_%28Azul%29_Rafael_Luiz_%2830204149731%29.jpg';
-  }
-  if (
+    pool = FALLBACK_POOLS.atr;
+  } else if (
     modelLower.includes('e195-e2') ||
     modelLower.includes('e295') ||
     modelLower.includes('ps-ae')
   ) {
-    return 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80';
-  }
-  if (
+    pool = FALLBACK_POOLS.embraerE2;
+  } else if (
     modelLower.includes('e195') ||
     modelLower.includes('erj') ||
     modelLower.includes('e190') ||
     modelLower.includes('embraer')
   ) {
-    return 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80';
-  }
-  if (
+    pool = FALLBACK_POOLS.embraerE1;
+  } else if (
     modelLower.includes('a320') ||
     modelLower.includes('a321') ||
     modelLower.includes('a319') ||
     modelLower.includes('airbus')
   ) {
-    return 'https://images.unsplash.com/photo-1520437358207-323b43b50729?auto=format&fit=crop&w=800&q=80';
-  }
-  if (
+    pool = FALLBACK_POOLS.airbus;
+  } else if (
     modelLower.includes('737') ||
     modelLower.includes('787') ||
     modelLower.includes('boeing')
   ) {
-    return 'https://images.unsplash.com/photo-1544016768-982d1554c0b7?auto=format&fit=crop&w=800&q=80';
-  }
-  if (airlineLower.includes('azul')) {
-    return 'https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80';
+    pool = FALLBACK_POOLS.boeing;
+  } else if (airlineLower.includes('azul')) {
+    pool = FALLBACK_POOLS.embraerE2;
   }
 
-  return 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80';
+  const safeIndex = Math.abs(index) % pool.length;
+  return pool[safeIndex];
 }
 
 export const PlanespottersPhoto: React.FC<PlanespottersPhotoProps> = ({
@@ -66,6 +108,7 @@ export const PlanespottersPhoto: React.FC<PlanespottersPhotoProps> = ({
   className = 'h-36 w-full',
   badgeLabel = 'Foto Real',
   badgeColor = 'blue',
+  photoIndex = 0,
 }) => {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photographer, setPhotographer] = useState<string | null>(null);
@@ -77,7 +120,7 @@ export const PlanespottersPhoto: React.FC<PlanespottersPhotoProps> = ({
     const cleanReg = (registration || '').toUpperCase().trim();
 
     if (!cleanReg || cleanReg === 'SEM-PREFIXO') {
-      setPhotoUrl(getFallbackImage(aircraftModel, airline));
+      setPhotoUrl(getFallbackImage(aircraftModel, airline, photoIndex));
       setLoading(false);
       return;
     }
@@ -98,18 +141,20 @@ export const PlanespottersPhoto: React.FC<PlanespottersPhotoProps> = ({
         clearTimeout(timeoutId);
         if (isMounted) {
           if (data && data.photos && data.photos.length > 0) {
-            const firstPhoto = data.photos[0];
-            const src = firstPhoto.thumbnail_large?.src || firstPhoto.thumbnail?.src;
+            // Select photo based on photoIndex so different cards show different photos
+            const selectedIdx = Math.abs(photoIndex) % data.photos.length;
+            const chosenPhoto = data.photos[selectedIdx] || data.photos[0];
+            const src = chosenPhoto.thumbnail_large?.src || chosenPhoto.thumbnail?.src;
             if (src) {
               setPhotoUrl(src);
-              setPhotographer(firstPhoto.photographer || 'Planespotters.net');
+              setPhotographer(chosenPhoto.photographer || 'Planespotters.net');
               setIsPlanespotters(true);
             } else {
-              setPhotoUrl(getFallbackImage(aircraftModel, airline));
+              setPhotoUrl(getFallbackImage(aircraftModel, airline, photoIndex));
               setIsPlanespotters(false);
             }
           } else {
-            setPhotoUrl(getFallbackImage(aircraftModel, airline));
+            setPhotoUrl(getFallbackImage(aircraftModel, airline, photoIndex));
             setIsPlanespotters(false);
           }
           setLoading(false);
@@ -118,7 +163,7 @@ export const PlanespottersPhoto: React.FC<PlanespottersPhotoProps> = ({
       .catch(() => {
         clearTimeout(timeoutId);
         if (isMounted) {
-          setPhotoUrl(getFallbackImage(aircraftModel, airline));
+          setPhotoUrl(getFallbackImage(aircraftModel, airline, photoIndex));
           setIsPlanespotters(false);
           setLoading(false);
         }
@@ -129,7 +174,7 @@ export const PlanespottersPhoto: React.FC<PlanespottersPhotoProps> = ({
       clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [registration, aircraftModel, airline]);
+  }, [registration, aircraftModel, airline, photoIndex]);
 
   const colorBadgeClasses = {
     blue: 'border-blue-400/40 text-blue-300 bg-slate-950/80',

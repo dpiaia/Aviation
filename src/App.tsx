@@ -8,6 +8,7 @@ import { CuriosityCards } from './components/CuriosityCards';
 import { FlightLogTable } from './components/FlightLogTable';
 import { AddFlightModal } from './components/AddFlightModal';
 import { ImportCsvModal } from './components/ImportCsvModal';
+import { AirportDetailsModal } from './components/AirportDetailsModal';
 import { DottedWorldMapBackground } from './components/DottedWorldMapBackground';
 import { INITIAL_FLIGHTS } from './data/initialFlights';
 import { Flight } from './types';
@@ -17,6 +18,7 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
+  const [selectedAirportModal, setSelectedAirportModal] = useState<string | null>(null);
 
   // Sync dark mode class on document element
   useEffect(() => {
@@ -33,6 +35,10 @@ export default function App() {
 
   const handleImportFlights = (importedFlights: Flight[]) => {
     setFlights((prev) => [...importedFlights, ...prev]);
+  };
+
+  const handleSelectAirport = (airportCode: string) => {
+    setSelectedAirportModal(airportCode);
   };
 
   return (
@@ -55,7 +61,7 @@ export default function App() {
         <StatsOverview flights={flights} />
 
         {/* Interactive Flight Route Map */}
-        <InteractiveFlightMap flights={flights} />
+        <InteractiveFlightMap flights={flights} onSelectAirport={handleSelectAirport} />
 
         {/* Chart Section: Line Chart per Year + Total Monthly Bars */}
         <MonthlyFlightsChart flights={flights} isDarkMode={isDarkMode} />
@@ -64,10 +70,10 @@ export default function App() {
         <AircraftColumns flights={flights} />
 
         {/* Curiosity & Records Cards */}
-        <CuriosityCards flights={flights} />
+        <CuriosityCards flights={flights} onSelectAirport={handleSelectAirport} />
 
         {/* Flight Log History Table */}
-        <FlightLogTable flights={flights} />
+        <FlightLogTable flights={flights} onSelectAirport={handleSelectAirport} />
       </main>
 
       {/* Tactical Immersive Footer */}
@@ -97,6 +103,11 @@ export default function App() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImportFlights={handleImportFlights}
+      />
+
+      <AirportDetailsModal
+        airportQuery={selectedAirportModal}
+        onClose={() => setSelectedAirportModal(null)}
       />
     </div>
   );

@@ -13,12 +13,14 @@ import {
 } from 'lucide-react';
 import { Flight } from '../types';
 import { getAirlineLogo } from '../utils/airlineLogos';
+import { parseAirportCodes } from '../utils/airportDb';
 
 interface FlightLogTableProps {
   flights: Flight[];
+  onSelectAirport?: (airport: string) => void;
 }
 
-export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights }) => {
+export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelectAirport }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAirline, setSelectedAirline] = useState('ALL');
   const [selectedYear, setSelectedYear] = useState('ALL');
@@ -189,14 +191,40 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights }) => {
                   </td>
 
                   {/* Route */}
-                  <td className="py-3 px-3 font-medium text-slate-200 max-w-xs truncate">
-                    <span className="text-white font-bold">
-                      {f.from.split('/')[0].trim()}
-                    </span>{' '}
-                    <span className="text-blue-400 mx-1">➔</span>{' '}
-                    <span className="text-white font-bold">
-                      {f.to.split('/')[0].trim()}
-                    </span>
+                  <td className="py-3 px-3 font-medium text-slate-200">
+                    {(() => {
+                      const fromCodes = parseAirportCodes(f.from);
+                      const toCodes = parseAirportCodes(f.to);
+                      return (
+                        <div className="flex items-center gap-1.5 flex-wrap text-xs">
+                          <button
+                            type="button"
+                            onClick={() => onSelectAirport && onSelectAirport(f.from)}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-800/90 hover:bg-blue-600/30 hover:border-blue-500/50 text-slate-100 font-bold transition-all border border-slate-700/80 cursor-pointer group"
+                            title={`Clique para ver detalhes de ${fromCodes.city} (${fromCodes.iata} / ${fromCodes.icao})`}
+                          >
+                            <span>{fromCodes.city}</span>
+                            <span className="text-[10px] font-mono text-blue-400 group-hover:text-blue-300 font-extrabold">
+                              ({fromCodes.iata})
+                            </span>
+                          </button>
+
+                          <span className="text-blue-400 font-bold">➔</span>
+
+                          <button
+                            type="button"
+                            onClick={() => onSelectAirport && onSelectAirport(f.to)}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-800/90 hover:bg-blue-600/30 hover:border-blue-500/50 text-slate-100 font-bold transition-all border border-slate-700/80 cursor-pointer group"
+                            title={`Clique para ver detalhes de ${toCodes.city} (${toCodes.iata} / ${toCodes.icao})`}
+                          >
+                            <span>{toCodes.city}</span>
+                            <span className="text-[10px] font-mono text-blue-400 group-hover:text-blue-300 font-extrabold">
+                              ({toCodes.iata})
+                            </span>
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </td>
 
                   {/* Airline */}

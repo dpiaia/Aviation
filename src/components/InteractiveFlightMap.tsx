@@ -8,6 +8,7 @@ import { parseAirport, AirportLocation } from '../utils/airportCoordinates';
 
 interface InteractiveFlightMapProps {
   flights: Flight[];
+  onSelectAirport?: (airport: string) => void;
 }
 
 interface RouteStat {
@@ -20,7 +21,7 @@ interface RouteStat {
   recentDate: string;
 }
 
-export function InteractiveFlightMap({ flights }: InteractiveFlightMapProps) {
+export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFlightMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
@@ -447,19 +448,31 @@ export function InteractiveFlightMap({ flights }: InteractiveFlightMapProps) {
               </div>
 
               <div className="flex items-center justify-between mb-3 bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
-                <div className="text-center">
-                  <span className="text-lg font-black text-white font-mono">{activeRoute.fromAirport.iata}</span>
+                <button
+                  type="button"
+                  onClick={() => onSelectAirport && onSelectAirport(activeRoute.fromAirport.iata)}
+                  className="text-center group hover:bg-slate-800/80 p-1 rounded transition-colors cursor-pointer"
+                  title="Clique para ver ficha do aeroporto"
+                >
+                  <span className="text-lg font-black text-white font-mono group-hover:text-blue-400">{activeRoute.fromAirport.iata}</span>
                   <span className="block text-[10px] text-slate-400 truncate max-w-[80px]">
                     {activeRoute.fromAirport.city}
                   </span>
-                </div>
+                </button>
+
                 <ArrowRight className="w-4 h-4 text-amber-400" />
-                <div className="text-center">
-                  <span className="text-lg font-black text-white font-mono">{activeRoute.toAirport.iata}</span>
+
+                <button
+                  type="button"
+                  onClick={() => onSelectAirport && onSelectAirport(activeRoute.toAirport.iata)}
+                  className="text-center group hover:bg-slate-800/80 p-1 rounded transition-colors cursor-pointer"
+                  title="Clique para ver ficha do aeroporto"
+                >
+                  <span className="text-lg font-black text-white font-mono group-hover:text-blue-400">{activeRoute.toAirport.iata}</span>
                   <span className="block text-[10px] text-slate-400 truncate max-w-[80px]">
                     {activeRoute.toAirport.city}
                   </span>
-                </div>
+                </button>
               </div>
 
               <div className="space-y-2 text-slate-300">
