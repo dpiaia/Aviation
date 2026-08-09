@@ -241,7 +241,7 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                 {/* Family Photo Banner */}
                 <div className="relative mb-4">
                   <PlanespottersPhoto
-                    registration={top1Grouped.registrations?.[0] || ''}
+                    registration={top1Grouped.registrations?.[1] || top1Grouped.registrations?.[0] || ''}
                     aircraftModel={top1Grouped.familyGroup}
                     airline={top1Grouped.manufacturer}
                     badgeColor="amber"
@@ -345,7 +345,7 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                 {/* Manufacturer Photo Banner */}
                 <div className="relative mb-4">
                   <PlanespottersPhoto
-                    registration={top1Manufacturer.registrations?.[0] || ''}
+                    registration={top1Manufacturer.registrations?.[2] || top1Manufacturer.registrations?.[0] || ''}
                     aircraftModel={top1Manufacturer.topModel || top1Manufacturer.name}
                     airline={top1Manufacturer.name}
                     badgeColor="cyan"

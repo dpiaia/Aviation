@@ -164,19 +164,31 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                         </span>
                       </div>
                       <div className="flex items-center justify-between font-mono text-xs text-slate-900 font-black">
-                        <div>
-                          <span>{item.lastFlight.fromIata}</span>
+                        <button
+                          type="button"
+                          onClick={() => onSelectAirport && onSelectAirport(item.lastFlight.fromIata)}
+                          className="text-left group hover:bg-blue-100/80 p-0.5 rounded transition-colors cursor-pointer"
+                          title={`Clique para ver detalhes do aeroporto ${item.lastFlight.fromIata}`}
+                        >
+                          <span className="text-blue-700 group-hover:underline font-black">{item.lastFlight.fromIata}</span>
                           <span className="block text-[10px] text-slate-500 font-sans font-normal truncate max-w-[80px]">
                             {item.lastFlight.fromCity}
                           </span>
-                        </div>
+                        </button>
+
                         <ArrowRight className="w-3.5 h-3.5 text-blue-500 mx-1 shrink-0" />
-                        <div className="text-right">
-                          <span>{item.lastFlight.toIata}</span>
+
+                        <button
+                          type="button"
+                          onClick={() => onSelectAirport && onSelectAirport(item.lastFlight.toIata)}
+                          className="text-right group hover:bg-blue-100/80 p-0.5 rounded transition-colors cursor-pointer"
+                          title={`Clique para ver detalhes do aeroporto ${item.lastFlight.toIata}`}
+                        >
+                          <span className="text-blue-700 group-hover:underline font-black">{item.lastFlight.toIata}</span>
                           <span className="block text-[10px] text-slate-500 font-sans font-normal truncate max-w-[80px]">
                             {item.lastFlight.toCity}
                           </span>
-                        </div>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -245,14 +257,19 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                     <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-[#EC6726]/10 rounded-full blur-2xl pointer-events-none" />
 
                     <div className="flex items-center justify-between">
-                      <div className="text-center">
-                        <span className="text-3xl font-black font-mono tracking-tight text-white block">
+                      <button
+                        type="button"
+                        onClick={() => onSelectAirport && onSelectAirport(route.fromIata)}
+                        className="text-center group hover:bg-slate-800/80 p-1.5 rounded-xl transition-colors cursor-pointer"
+                        title={`Clique para ver detalhes do aeroporto ${route.fromIata}`}
+                      >
+                        <span className="text-3xl font-black font-mono tracking-tight text-white group-hover:text-amber-400 block transition-colors">
                           {route.fromIata}
                         </span>
                         <span className="text-[11px] text-slate-400 font-medium truncate max-w-[90px] block">
                           {route.fromCity.split(',')[0]}
                         </span>
-                      </div>
+                      </button>
 
                       <div className="flex-1 px-3 flex flex-col items-center justify-center">
                         <div className="flex items-center gap-1 text-[#EC6726] font-mono text-xs font-bold mb-1">
@@ -268,14 +285,19 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                         </span>
                       </div>
 
-                      <div className="text-center">
-                        <span className="text-3xl font-black font-mono tracking-tight text-white block">
+                      <button
+                        type="button"
+                        onClick={() => onSelectAirport && onSelectAirport(route.toIata)}
+                        className="text-center group hover:bg-slate-800/80 p-1.5 rounded-xl transition-colors cursor-pointer"
+                        title={`Clique para ver detalhes do aeroporto ${route.toIata}`}
+                      >
+                        <span className="text-3xl font-black font-mono tracking-tight text-white group-hover:text-amber-400 block transition-colors">
                           {route.toIata}
                         </span>
                         <span className="text-[11px] text-slate-400 font-medium truncate max-w-[90px] block">
                           {route.toCity.split(',')[0]}
                         </span>
-                      </div>
+                      </button>
                     </div>
                   </div>
 
@@ -405,7 +427,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                       airline={rec.flight.airline}
                       badgeColor={idx === 0 ? 'rose' : idx === 1 ? 'emerald' : 'cyan'}
                       badgeLabel={rec.title}
-                      photoIndex={idx + 1}
+                      photoIndex={idx + 4}
                       className="h-44 w-full shadow-md rounded-xl"
                     />
                   </div>
@@ -423,19 +445,31 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
 
                     {/* Route Ticket Highlight */}
                     <div className="bg-slate-900 text-white p-3 rounded-xl flex items-center justify-between font-mono shadow">
-                      <div>
-                        <span className="text-lg font-black text-amber-400">{rec.fromIata}</span>
+                      <button
+                        type="button"
+                        onClick={() => onSelectAirport && onSelectAirport(rec.fromIata)}
+                        className="text-left group hover:bg-slate-800 p-1 rounded transition-colors cursor-pointer"
+                        title={`Clique para ver detalhes do aeroporto ${rec.fromIata}`}
+                      >
+                        <span className="text-lg font-black text-amber-400 group-hover:text-amber-300">{rec.fromIata}</span>
                         <span className="block text-[10px] text-slate-300 font-sans font-normal truncate max-w-[90px]">
                           {rec.fromCity}
                         </span>
-                      </div>
+                      </button>
+
                       <ArrowRight className="w-4 h-4 text-amber-400 shrink-0" />
-                      <div className="text-right">
-                        <span className="text-lg font-black text-amber-400">{rec.toIata}</span>
+
+                      <button
+                        type="button"
+                        onClick={() => onSelectAirport && onSelectAirport(rec.toIata)}
+                        className="text-right group hover:bg-slate-800 p-1 rounded transition-colors cursor-pointer"
+                        title={`Clique para ver detalhes do aeroporto ${rec.toIata}`}
+                      >
+                        <span className="text-lg font-black text-amber-400 group-hover:text-amber-300">{rec.toIata}</span>
                         <span className="block text-[10px] text-slate-300 font-sans font-normal truncate max-w-[90px]">
                           {rec.toCity}
                         </span>
-                      </div>
+                      </button>
                     </div>
 
                     <p className="text-xs font-semibold text-slate-700">
@@ -542,7 +576,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                       airline={age.flight.airline}
                       badgeColor={badgeTheme.color}
                       badgeLabel={badgeTheme.label}
-                      photoIndex={idx + 2}
+                      photoIndex={idx + 8}
                       className="h-48 w-full shadow-md rounded-xl"
                     />
                   </div>
@@ -632,9 +666,14 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                 <span className="text-[10px] uppercase font-mono font-bold text-blue-600 flex items-center gap-1">
                   <Building2 className="w-3.5 h-3.5" /> Aeroporto Mais Frequentado
                 </span>
-                <span className="text-lg font-black text-slate-900 font-mono">
+                <button
+                  type="button"
+                  onClick={() => onSelectAirport && onSelectAirport(extraCuriosities.topAirport.iata)}
+                  className="text-lg font-black text-blue-600 hover:text-blue-800 font-mono hover:underline cursor-pointer"
+                  title={`Clique para ver detalhes do aeroporto ${extraCuriosities.topAirport.iata}`}
+                >
                   {extraCuriosities.topAirport.iata}
-                </span>
+                </button>
               </div>
 
               <div>

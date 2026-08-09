@@ -14,40 +14,45 @@ interface PlanespottersPhotoProps {
 // Fallback high-quality aviation imagery mapped by model/airline keywords with multi-photo variety pools
 const FALLBACK_POOLS = {
   atr: [
+    'https://images.unsplash.com/photo-1556388158-158ea5ccacbd?auto=format&fit=crop&w=800&q=80',
     'https://upload.wikimedia.org/wikipedia/commons/9/9e/ATR_72-600_%28Azul%29_Rafael_Luiz_%2830204149731%29.jpg',
     'https://upload.wikimedia.org/wikipedia/commons/2/23/PR-TQI_ATR.72-212A_ATR_Azul_Linhas_A%C3%A9reas_Brasileiras_%2835940989063%29.jpg',
+    'https://images.unsplash.com/photo-1583551538520-2175949a20a4?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1520437358207-323b43b50729?auto=format&fit=crop&w=800&q=80',
   ],
   embraerE2: [
     'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1559297434-fae8a1916a79?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1544016768-982d1554c0b7?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1520437358207-323b43b50729?auto=format&fit=crop&w=800&q=80',
   ],
   embraerE1: [
     'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1529074963764-98f45c47344b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583508915901-b5f84c1dcde1?auto=format&fit=crop&w=800&q=80',
   ],
   airbus: [
     'https://images.unsplash.com/photo-1520437358207-323b43b50729?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80',
   ],
   boeing: [
-    'https://images.unsplash.com/photo-1544016768-982d1554c0b7?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1583508915901-b5f84c1dcde1?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1559297434-fae8a1916a79?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1570710891163-6d3b5c47248b?auto=format&fit=crop&w=800&q=80',
-  ],
-  default: [
     'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
+  ],
+  default: [
+    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&w=800&q=80',
   ],
 };
 
@@ -141,14 +146,28 @@ export const PlanespottersPhoto: React.FC<PlanespottersPhotoProps> = ({
         clearTimeout(timeoutId);
         if (isMounted) {
           if (data && data.photos && data.photos.length > 0) {
-            // Select photo based on photoIndex so different cards show different photos
-            const selectedIdx = Math.abs(photoIndex) % data.photos.length;
-            const chosenPhoto = data.photos[selectedIdx] || data.photos[0];
-            const src = chosenPhoto.thumbnail_large?.src || chosenPhoto.thumbnail?.src;
-            if (src) {
-              setPhotoUrl(src);
-              setPhotographer(chosenPhoto.photographer || 'Planespotters.net');
-              setIsPlanespotters(true);
+            let chosenPhoto = null;
+            if (data.photos.length > 1) {
+              const selectedIdx = Math.abs(photoIndex) % data.photos.length;
+              chosenPhoto = data.photos[selectedIdx];
+            } else if (photoIndex === 0) {
+              chosenPhoto = data.photos[0];
+            } else {
+              // If Planespotters only has 1 photo for this registration and photoIndex > 0,
+              // fallback to model pool indexed by photoIndex so we don't repeat the exact same image
+              chosenPhoto = null;
+            }
+
+            if (chosenPhoto) {
+              const src = chosenPhoto.thumbnail_large?.src || chosenPhoto.thumbnail?.src;
+              if (src) {
+                setPhotoUrl(src);
+                setPhotographer(chosenPhoto.photographer || 'Planespotters.net');
+                setIsPlanespotters(true);
+              } else {
+                setPhotoUrl(getFallbackImage(aircraftModel, airline, photoIndex));
+                setIsPlanespotters(false);
+              }
             } else {
               setPhotoUrl(getFallbackImage(aircraftModel, airline, photoIndex));
               setIsPlanespotters(false);
