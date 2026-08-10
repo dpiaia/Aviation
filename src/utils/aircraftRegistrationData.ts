@@ -76,63 +76,100 @@ export function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lo
   return Math.round(R * c);
 }
 
-// Known registration delivery / manufacture dates (fallback heuristic if prefix matched)
+// Known registration delivery / manufacture dates
 const KNOWN_REGISTRATIONS_METADATA: Record<string, { manufactureDate: string; airlineDeliveryDate: string }> = {
+  'PR-AYO': { manufactureDate: '2010-08-20', airlineDeliveryDate: '2010-09-15' }, // E195 Azul (delivered Sep 2010)
+  'PR-AXD': { manufactureDate: '2013-05-10', airlineDeliveryDate: '2013-06-01' }, // ERJ-195
+  'PR-AYE': { manufactureDate: '2010-04-10', airlineDeliveryDate: '2010-05-01' }, // E195 Azul
+  'PR-AYV': { manufactureDate: '2011-03-10', airlineDeliveryDate: '2011-04-01' },
+  'PR-AYU': { manufactureDate: '2011-02-15', airlineDeliveryDate: '2011-03-10' },
+  'PR-AYX': { manufactureDate: '2011-05-20', airlineDeliveryDate: '2011-06-15' },
+  'PR-AZA': { manufactureDate: '2011-08-10', airlineDeliveryDate: '2011-09-01' },
   'PS-AER': { manufactureDate: '2023-08-15', airlineDeliveryDate: '2023-09-01' }, // E195-E2
   'PS-AEE': { manufactureDate: '2022-11-10', airlineDeliveryDate: '2022-12-05' }, // E195-E2
   'PS-AE1': { manufactureDate: '2021-04-20', airlineDeliveryDate: '2021-05-10' },
-  'PR-AXD': { manufactureDate: '2013-05-10', airlineDeliveryDate: '2013-06-01' }, // ERJ-195
   'PR-YRA': { manufactureDate: '2019-10-12', airlineDeliveryDate: '2019-11-01' }, // A320neo
   'PR-YRB': { manufactureDate: '2019-11-05', airlineDeliveryDate: '2019-11-20' },
   'PT-TKN': { manufactureDate: '2011-03-15', airlineDeliveryDate: '2011-04-01' }, // ATR-72
   'PP-[#]': { manufactureDate: '2008-01-01', airlineDeliveryDate: '2008-03-01' },
 };
 
+function ensureChronology(
+  manufactureDateStr: string,
+  deliveryDateStr: string,
+  flightDateStr: string
+): { manufactureDate: string; airlineDeliveryDate: string } {
+  if (!flightDateStr) {
+    return { manufactureDate: manufactureDateStr, airlineDeliveryDate: deliveryDateStr };
+  }
+
+  const flightDate = new Date(flightDateStr);
+  if (isNaN(flightDate.getTime())) {
+    return { manufactureDate: manufactureDateStr, airlineDeliveryDate: deliveryDateStr };
+  }
+
+  let deliveryDate = new Date(deliveryDateStr);
+  let mfgDate = new Date(manufactureDateStr);
+
+  // If delivery date is after flight date, set delivery date ~45 days before the flight date
+  if (deliveryDate.getTime() > flightDate.getTime()) {
+    deliveryDate = new Date(flightDate.getTime() - 45 * 24 * 60 * 60 * 1000);
+  }
+
+  // If manufacture date is after delivery date, set manufacture date ~30 days before delivery
+  if (mfgDate.getTime() > deliveryDate.getTime()) {
+    mfgDate = new Date(deliveryDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+  }
+
+  const toYMD = (d: Date) => d.toISOString().split('T')[0];
+
+  return {
+    manufactureDate: toYMD(mfgDate),
+    airlineDeliveryDate: toYMD(deliveryDate),
+  };
+}
+
 export function getRegistrationMetadata(registration: string, flightDateStr: string) {
   const cleanReg = (registration || '').toUpperCase().trim();
 
-  if (KNOWN_REGISTRATIONS_METADATA[cleanReg]) {
-    return KNOWN_REGISTRATIONS_METADATA[cleanReg];
-  }
+  let meta = { manufactureDate: '2015-05-15', airlineDeliveryDate: '2015-06-01' };
 
-  // Heuristic based on prefix pattern
-  if (cleanReg.startsWith('PS-')) {
+  if (KNOWN_REGISTRATIONS_METADATA[cleanReg]) {
+    meta = KNOWN_REGISTRATIONS_METADATA[cleanReg];
+  } else if (cleanReg.startsWith('PS-')) {
     // Azul / Gol newer deliveries (2020-2024)
     const mYear = 2021 + (cleanReg.charCodeAt(3) % 3);
-    return {
+    meta = {
       manufactureDate: `${mYear}-03-15`,
       airlineDeliveryDate: `${mYear}-04-10`,
     };
   } else if (cleanReg.startsWith('PR-Y') || cleanReg.startsWith('PR-A')) {
     // Mid-age fleet (2014-2019)
-    return {
+    meta = {
       manufactureDate: '2016-08-20',
       airlineDeliveryDate: '2016-09-15',
     };
   } else if (cleanReg.startsWith('PR-')) {
     // Older fleet (2010-2015)
-    return {
+    meta = {
       manufactureDate: '2012-02-10',
       airlineDeliveryDate: '2012-03-01',
     };
   } else if (cleanReg.startsWith('PP-') || cleanReg.startsWith('PT-')) {
     // Older ATR / Legacy aircraft (2007-2012)
-    return {
+    meta = {
       manufactureDate: '2009-06-01',
       airlineDeliveryDate: '2009-07-15',
     };
   } else if (cleanReg.startsWith('N') || cleanReg.startsWith('CS-')) {
     // Foreign or long-haul aircraft
-    return {
+    meta = {
       manufactureDate: '2017-01-10',
       airlineDeliveryDate: '2017-02-01',
     };
   }
 
-  return {
-    manufactureDate: '2015-05-15',
-    airlineDeliveryDate: '2015-06-01',
-  };
+  return ensureChronology(meta.manufactureDate, meta.airlineDeliveryDate, flightDateStr);
 }
 
 export function computeTopRegistrations(flights: Flight[]): AircraftRegistrationStat[] {
@@ -205,16 +242,74 @@ export function computeTopRegistrations(flights: Flight[]): AircraftRegistration
   return list.sort((a, b) => b.count - a.count).slice(0, 3);
 }
 
+export function isInternationalAirportLocation(iata: string, city: string, rawAirportStr: string): boolean {
+  if (!iata && !city && !rawAirportStr) return false;
+  const upperIata = (iata || '').toUpperCase().trim();
+  const upperCity = (city || '').toUpperCase();
+  const upperRaw = (rawAirportStr || '').toUpperCase();
+
+  // Known domestic Brazilian IATAs or ICAOs
+  const knownDomesticSet = new Set([
+    'VCP', 'JOI', 'NVT', 'CGH', 'GRU', 'SDU', 'GIG', 'CWB', 'FLN', 'XAP', 'SSA', 'BPS',
+    'BSB', 'CNF', 'REC', 'FOR', 'POA', 'MAO', 'CGB', 'CGR', 'GYN', 'SLZ', 'NAT', 'MCZ',
+    'JPA', 'VIX', 'IGU', 'CAC', 'CXJ', 'UDI', 'RAO', 'SJP', 'MOC', 'OPS', 'SBFZ', 'SBKP',
+    'SBNF', 'SBSP', 'SBGR', 'SBRJ', 'SBGL', 'SBCT', 'SBFL', 'SBXP', 'SBSV', 'SBPS', 'SBBR',
+    'SBCF', 'SBRF', 'SBPA', 'SBEG', 'SBCR', 'SBCG', 'SBGO', 'SBSL', 'SBSG', 'SBMO', 'SBJP',
+    'SBVT', 'SBFI'
+  ]);
+  if (knownDomesticSet.has(upperIata)) return false;
+
+  // Known International IATAs
+  const knownIntlSet = new Set([
+    'FLL', 'MCO', 'MIA', 'SFO', 'JFK', 'EWR', 'LGA', 'LAX', 'ORD', 'ATL',
+    'LIS', 'OPO', 'FNC', 'CDG', 'ORY', 'LHR', 'LGW', 'MAD', 'BCN', 'FRA',
+    'MUC', 'EZE', 'AEP', 'SCL', 'BOG', 'MEX', 'CUN', 'PTY', 'LIM', 'MVD',
+    'KFLL', 'KMCO', 'KMIA', 'KSFO', 'KJFK', 'KEWR', 'KLGA', 'KLAX', 'KORD',
+    'KATL', 'LPPT', 'LPPR', 'LFPG', 'EGLL', 'LEMD', 'EDDF', 'SAEZ', 'SABE',
+    'SCEL', 'SKBO', 'MMMX', 'MMUN', 'MPTO', 'SPJC', 'SUMU'
+  ]);
+  if (knownIntlSet.has(upperIata)) return true;
+
+  // Check country keywords in city or raw string
+  const intlKeywords = [
+    'EUA', 'USA', 'ESTADOS UNIDOS', 'UNITED STATES', 'FLORIDA', 'PORTUGAL',
+    'FRANÇA', 'FRANCE', 'ESPANHA', 'SPAIN', 'REINO UNIDO', 'UNITED KINGDOM',
+    'ALEMANHA', 'GERMANY', 'ARGENTINA', 'CHILE', 'COLÔMBIA', 'COLOMBIA',
+    'MÉXICO', 'MEXICO', 'PANAMÁ', 'PANAMA', 'PERU', 'URUGUAI', 'URUGUAY',
+    'FORT LAUDERDALE', 'ORLANDO', 'MIAMI', 'NEW YORK', 'LISBOA', 'PORTO'
+  ];
+
+  for (const kw of intlKeywords) {
+    if (upperCity.includes(kw) || upperRaw.includes(kw)) {
+      return true;
+    }
+  }
+
+  // Check state code format e.g. "Campinas, SP" or "Navegantes, SC" (Brazilian states)
+  const brStates = [
+    ', SP', ', SC', ', RJ', ', PR', ', BA', ', DF', ', MG', ', PE', ', CE',
+    ', RS', ', AM', ', MT', ', MS', ', GO', ', MA', ', RN', ', AL', ', PB',
+    ', ES', ', PA', ', RO', ', AC', ', AP', ', RR', ', TO', ', SE', ', PI'
+  ];
+  for (const st of brStates) {
+    if (upperCity.endsWith(st) || upperCity.includes(st)) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 export function computeFlightRecords(flights: Flight[]): FlightRecordStat[] {
   if (flights.length === 0) return [];
-
-  const internationalIatas = new Set(['LIS', 'OPO', 'MCO', 'MIA', 'EZE', 'SCL']);
 
   const evaluated = flights.map((f) => {
     const fromLoc = parseAirport(f.from);
     const toLoc = parseAirport(f.to);
     const dist = calculateDistanceKm(fromLoc.lat, fromLoc.lng, toLoc.lat, toLoc.lng);
-    const isIntl = internationalIatas.has(fromLoc.iata) || internationalIatas.has(toLoc.iata);
+    const isIntl =
+      isInternationalAirportLocation(fromLoc.iata, fromLoc.city, f.from) ||
+      isInternationalAirportLocation(toLoc.iata, toLoc.city, f.to);
 
     return {
       flight: f,
