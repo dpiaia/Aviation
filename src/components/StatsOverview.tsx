@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Plane, Clock, Award, Building2 } from 'lucide-react';
+import { Plane, Clock, Award, Building2, Sparkles, ShieldCheck } from 'lucide-react';
 import { Flight } from '../types';
 import { parseDurationMinutes, formatTotalHours } from '../utils/flightAnalytics';
-import { getAirlineLogo } from '../utils/airlineLogos';
+import { AirlineLogo } from './AirlineLogo';
 
 interface StatsOverviewProps {
   flights: Flight[];
@@ -48,39 +48,55 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights }) => {
       id: 'total-flights',
       title: 'Total de Voos',
       value: totalFlights.toString(),
+      unit: 'voos',
       subtext: 'registrados no histórico',
+      badge: 'HISTÓRICO ATIVO',
       icon: Plane,
-      color: 'from-orange-500/10 to-amber-500/10 text-[#EC6726] border-[#EC6726]/20',
+      accentColor: 'border-[#EC6726]/40 hover:border-[#EC6726]/70',
+      glowColor: 'bg-[#EC6726]/10',
       iconBg: 'bg-[#EC6726] text-white',
+      textColor: 'text-[#EC6726]',
     },
     {
       id: 'total-hours',
       title: 'Tempo em Voo',
       value: totalHoursFormatted,
-      subtext: `${totalMinutes} minutos acumulados`,
+      unit: '',
+      subtext: `${totalMinutes.toLocaleString('pt-BR')} minutos acumulados`,
+      badge: 'TEMPO TOTAL',
       icon: Clock,
-      color: 'from-blue-500/10 to-indigo-500/10 text-blue-500 border-blue-500/20',
-      iconBg: 'bg-blue-600 text-white',
+      accentColor: 'border-sky-500/40 hover:border-sky-500/70',
+      glowColor: 'bg-sky-500/10',
+      iconBg: 'bg-sky-500 text-white',
+      textColor: 'text-sky-400',
     },
     {
       id: 'unique-tails',
       title: 'Matrículas Distintas',
       value: uniqueTails.toString(),
+      unit: 'aeronaves',
       subtext: 'aeronaves físicas voadas',
+      badge: 'FROTA ÚNICA',
       icon: Award,
-      color: 'from-emerald-500/10 to-teal-500/10 text-emerald-500 border-emerald-500/20',
+      accentColor: 'border-emerald-500/40 hover:border-emerald-500/70',
+      glowColor: 'bg-emerald-500/10',
       iconBg: 'bg-emerald-600 text-white',
+      textColor: 'text-emerald-400',
     },
     {
       id: 'top-airline',
       title: 'Companhia Principal',
       value: topAirline,
+      unit: '',
       subtext: `${topAirlineCount} voos (${Math.round(
         (topAirlineCount / (totalFlights || 1)) * 100
-      )}%)`,
+      )}% da preferência)`,
+      badge: 'PREFERIDA',
       icon: Building2,
-      color: 'from-purple-500/10 to-violet-500/10 text-purple-500 border-purple-500/20',
-      iconBg: 'bg-purple-600 text-white',
+      accentColor: 'border-amber-500/40 hover:border-amber-500/70',
+      glowColor: 'bg-amber-500/10',
+      iconBg: 'bg-amber-500 text-white',
+      textColor: 'text-amber-400',
     },
   ];
 
@@ -88,46 +104,75 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights }) => {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
       {stats.map((stat, idx) => {
         const IconComponent = stat.icon;
+        const isAirlineCard = stat.id === 'top-airline' && stat.value !== 'N/A';
+
         return (
           <motion.div
             key={stat.id}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.08 }}
-            whileHover={{ y: -3 }}
-            className={`relative p-5 rounded-2xl bg-slate-900/40 border border-slate-800/90 shadow-[0_4px_20px_rgba(0,0,0,0.3)] backdrop-blur-md overflow-hidden group hover:border-slate-700 transition-all`}
+            transition={{ duration: 0.35, delay: idx * 0.08 }}
+            whileHover={{ y: -4 }}
+            className={`relative p-5 rounded-2xl bg-slate-900/70 border ${stat.accentColor} shadow-[0_8px_25px_rgba(0,0,0,0.4)] backdrop-blur-xl overflow-hidden group transition-all duration-300 flex flex-col justify-between`}
           >
-            {/* Ambient corner radial glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(30,58,138,0.15),transparent_60%)] pointer-events-none" />
+            {/* Ambient subtle glow background */}
+            <div className={`absolute top-0 right-0 w-32 h-32 ${stat.glowColor} rounded-full blur-3xl pointer-events-none group-hover:scale-125 transition-transform duration-500`} />
 
-            <div className="relative flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  {stat.title}
-                </p>
-                <h3 className="text-3xl font-bold text-white mt-1 tracking-tight">
-                  {stat.value}
-                </h3>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  {stat.subtext}
-                </p>
-              </div>
+            {/* Top Row: Eyebrow Title & Badge */}
+            <div className="flex items-center justify-between mb-3 relative z-10">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+                {stat.title}
+              </p>
+              <span className="text-[9px] font-mono font-extrabold px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700/80 shadow-sm flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+                {stat.badge}
+              </span>
+            </div>
 
-              <div
-                className={`w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.15)] shrink-0 overflow-hidden p-1.5`}
-              >
-                {stat.id === 'top-airline' && stat.value !== 'N/A' ? (
-                  <div className="w-full h-full bg-white rounded flex items-center justify-center p-1">
-                    <img
-                      src={getAirlineLogo(stat.value).logoUrl}
-                      alt={stat.value}
-                      className="max-h-full max-w-full object-contain"
-                    />
+            {/* Middle Row: Main Metric / Content */}
+            <div className="relative z-10 my-1 flex items-center justify-between gap-3">
+              {isAirlineCard ? (
+                <div className="flex flex-col gap-1.5">
+                  {/* White Container for Airline Logo */}
+                  <AirlineLogo
+                    airline={stat.value}
+                    size="lg"
+                    isLightBackground={false}
+                    showName={false}
+                  />
+                  <span className="text-sm font-bold text-slate-200 mt-1">
+                    {stat.value}
+                  </span>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <h3 className={`text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-mono`}>
+                      {stat.value}
+                    </h3>
+                    {stat.unit && (
+                      <span className="text-xs font-semibold text-slate-400 font-mono">
+                        {stat.unit}
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <IconComponent className="w-5 h-5 text-blue-400" />
-                )}
-              </div>
+                </div>
+              )}
+
+              {/* Icon Box */}
+              {!isAirlineCard && (
+                <div
+                  className={`w-12 h-12 rounded-xl ${stat.iconBg} flex items-center justify-center shadow-lg shrink-0 group-hover:scale-105 transition-transform duration-300`}
+                >
+                  <IconComponent className="w-6 h-6" />
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Row: Subtext & Verification */}
+            <div className="pt-3 mt-2 border-t border-slate-800/80 flex items-center justify-between relative z-10 text-[11px] text-slate-400">
+              <span>{stat.subtext}</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
             </div>
           </motion.div>
         );

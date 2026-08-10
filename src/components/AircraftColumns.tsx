@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import {
   Plane,
-  Layers,
-  Factory,
   Trophy,
-  ChevronRight,
   Sparkles,
-  Info,
   ChevronDown,
   ChevronUp,
-  Camera,
+  Factory,
+  Layers,
 } from 'lucide-react';
 import { Flight } from '../types';
 import {
@@ -22,49 +19,6 @@ import { PlanespottersPhoto } from './PlanespottersPhoto';
 
 interface AircraftColumnsProps {
   flights: Flight[];
-}
-
-function getAircraftPhoto(name: string, category: 'model' | 'family' | 'manufacturer'): string {
-  const nameLower = (name || '').toLowerCase();
-
-  if (category === 'model') {
-    if (nameLower.includes('e195-e2') || nameLower.includes('e295')) {
-      return 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80';
-    }
-    if (nameLower.includes('erj-195') || nameLower.includes('e195')) {
-      return 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=800&q=80';
-    }
-    if (nameLower.includes('atr')) {
-      return 'https://images.unsplash.com/photo-1556388158-158ea5ccacbd?auto=format&fit=crop&w=800&q=80';
-    }
-    if (nameLower.includes('a320')) {
-      return 'https://images.unsplash.com/photo-1520437358207-323b43b50729?auto=format&fit=crop&w=800&q=80';
-    }
-    return 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80';
-  }
-
-  if (category === 'family') {
-    if (nameLower.includes('embraer') || nameLower.includes('e-jets')) {
-      return 'https://images.unsplash.com/photo-1519074069444-1ba4eff56022?auto=format&fit=crop&w=800&q=80';
-    }
-    if (nameLower.includes('airbus') || nameLower.includes('a320')) {
-      return 'https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&w=800&q=80';
-    }
-    return 'https://images.unsplash.com/photo-1583551538520-2175949a20a4?auto=format&fit=crop&w=800&q=80';
-  }
-
-  // Manufacturer
-  if (nameLower.includes('embraer')) {
-    return 'https://images.unsplash.com/photo-1559297434-fae8a1916a79?auto=format&fit=crop&w=800&q=80';
-  }
-  if (nameLower.includes('airbus')) {
-    return 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?auto=format&fit=crop&w=800&q=80';
-  }
-  if (nameLower.includes('boeing')) {
-    return 'https://images.unsplash.com/photo-1544016768-982d1554c0b7?auto=format&fit=crop&w=800&q=80';
-  }
-
-  return 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80';
 }
 
 export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => {
@@ -93,62 +47,73 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
     : manufacturerStats.slice(1, 3);
 
   return (
-    <section className="mb-8">
+    <section className="mb-8 space-y-5">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
-              <Plane className="w-4 h-4" />
-            </div>
-            <h2 className="text-xl font-bold text-white">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#EC6726] text-white flex items-center justify-center shadow-lg shadow-[#EC6726]/20 shrink-0">
+            <Plane className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
               Análise de Frota & Fabricantes
             </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Métricas de voos categorizadas por modelo específico, famílias de aeronaves e fabricantes
+            </p>
           </div>
-          <p className="text-xs text-slate-400 mt-1 pl-10">
-            Métricas de frota por modelos específicos, famílias de aeronaves e indústrias
-          </p>
         </div>
 
-        <span className="self-start sm:self-auto text-xs font-mono font-semibold px-3 py-1 rounded-full bg-slate-900/80 text-blue-400 border border-slate-800">
-          RANKING DADOS REAIS
+        <span className="self-start sm:self-auto text-xs font-mono font-bold px-3 py-1 rounded-full bg-slate-800 text-blue-400 border border-slate-700 shadow-sm">
+          HISTÓRICO VERIFICADO
         </span>
       </div>
 
       {/* 3 Columns Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ================= COLUNA 1: MODELO ESPECÍFICO ================= */}
-        <div className="flex flex-col gap-3">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-1">
-            Modelos Específicos
-          </h3>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.1 }}
+          className="flex flex-col gap-3"
+        >
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
+              <Plane className="w-3.5 h-3.5 text-blue-400" /> Modelos Específicos
+            </h3>
+            <span className="text-[10px] font-mono font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+              {specificStats.length} Modelos
+            </span>
+          </div>
 
-          <div className="flex-1 bg-slate-900/40 border border-blue-500/30 rounded-2xl p-5 flex flex-col justify-between shadow-[0_0_20px_rgba(37,99,235,0.1)] relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex-1 bg-slate-900/70 border border-blue-500/30 rounded-2xl p-5 flex flex-col justify-between shadow-[0_10px_30px_rgba(37,99,235,0.12)] relative overflow-hidden backdrop-blur-xl group hover:border-blue-500/50 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-36 h-36 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* Featured Card #1 with Model Photo */}
             {top1Specific && (
               <div>
                 <div className="flex items-center justify-between mb-3 relative z-10">
-                  <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider flex items-center gap-1">
-                    <Trophy className="w-3.5 h-3.5" /> #1 Top Flyer
+                  <span className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20">
+                    <Trophy className="w-3.5 h-3.5 text-amber-400" /> #1 Mais Voado
                   </span>
-                  <span className="text-3xl font-black italic text-slate-700/50">01</span>
+                  <span className="text-3xl font-black italic text-slate-700/60 font-mono">01</span>
                 </div>
 
                 {/* Model Photo Banner */}
-                <div className="relative mb-4">
+                <div className="relative mb-4 rounded-xl overflow-hidden border border-slate-800 shadow-md">
                   <PlanespottersPhoto
                     registration={top1Specific.registrations?.[0] || ''}
                     aircraftModel={top1Specific.modelName}
                     airline={top1Specific.manufacturer}
                     badgeColor="blue"
-                    badgeLabel="Foto Modelo"
+                    badgeLabel="Aeronave #1"
                     photoIndex={0}
-                    className="h-36 w-full"
+                    className="h-38 w-full"
                   />
-                  <div className="absolute bottom-2 left-3 right-3 pointer-events-none z-10">
-                    <span className="text-[10px] text-blue-300 uppercase tracking-widest font-mono font-bold">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent pointer-events-none z-10" />
+                  <div className="absolute bottom-2.5 left-3 right-3 pointer-events-none z-20">
+                    <span className="text-[10px] text-blue-400 uppercase tracking-widest font-mono font-extrabold">
                       {top1Specific.manufacturer}
                     </span>
                     <h4 className="text-lg font-bold text-white leading-tight drop-shadow-md">
@@ -157,21 +122,26 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                   </div>
                 </div>
 
-                <div className="mb-4 relative z-10">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-blue-400 font-mono">
-                      {top1Specific.count}
-                    </span>
-                    <span className="text-xs text-slate-400 font-medium">
-                      voos ({top1Specific.percentage}%)
+                <div className="mb-3 relative z-10">
+                  <div className="flex items-baseline justify-between">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl font-black text-blue-400 font-mono">
+                        {top1Specific.count}
+                      </span>
+                      <span className="text-xs text-slate-400 font-medium font-mono">
+                        voos
+                      </span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
+                      {top1Specific.percentage}% do total
                     </span>
                   </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="w-full bg-slate-800 rounded-full h-1.5 mb-4 overflow-hidden">
+                <div className="w-full bg-slate-800 rounded-full h-2 mb-4 overflow-hidden p-0.5 border border-slate-700/50">
                   <div
-                    className="bg-blue-500 h-1.5 rounded-full"
+                    className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full"
                     style={{ width: `${top1Specific.percentage}%` }}
                   />
                 </div>
@@ -179,21 +149,21 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
             )}
 
             {/* Runners Up List */}
-            <div className="space-y-3 pt-4 border-t border-slate-800/80 relative z-10">
+            <div className="space-y-2.5 pt-4 border-t border-slate-800/80 relative z-10">
               {otherSpecifics.map((item, idx) => (
                 <div
                   key={item.modelName}
-                  className="flex items-center justify-between opacity-90 hover:opacity-100 transition-opacity"
+                  className="flex items-center justify-between p-2 rounded-xl bg-slate-950/40 border border-slate-800/60 hover:bg-slate-800/40 transition-colors"
                 >
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="w-4 text-slate-500 font-mono text-[10px]">
-                      {idx + 2}.
+                  <div className="flex items-center gap-2.5 text-xs">
+                    <span className="w-5 text-slate-400 font-mono font-bold text-[11px]">
+                      #{idx + 2}
                     </span>
                     <span className="font-semibold text-slate-200">
                       {item.modelName}
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-slate-400">
+                  <span className="text-xs font-mono font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
                     {item.count} voos
                   </span>
                 </div>
@@ -217,40 +187,51 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
               </button>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* ================= COLUNA 2: MODELOS AGRUPADOS (FAMÍLIAS) ================= */}
-        <div className="flex flex-col gap-3">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-1">
-            Famílias de Aeronaves
-          </h3>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.18 }}
+          className="flex flex-col gap-3"
+        >
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-amber-400" /> Famílias de Aeronaves
+            </h3>
+            <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+              {groupedStats.length} Famílias
+            </span>
+          </div>
 
-          <div className="flex-1 bg-slate-900/40 border border-amber-500/30 rounded-2xl p-5 flex flex-col justify-between shadow-[0_0_20px_rgba(245,158,11,0.08)] relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex-1 bg-slate-900/70 border border-amber-500/30 rounded-2xl p-5 flex flex-col justify-between shadow-[0_10px_30px_rgba(245,158,11,0.1)] relative overflow-hidden backdrop-blur-xl group hover:border-amber-500/50 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-36 h-36 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* Featured Card #1 with Family Photo */}
             {top1Grouped && (
               <div>
                 <div className="flex items-center justify-between mb-3 relative z-10">
-                  <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5" /> Grupo Mais Ativo
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Grupo Líder
                   </span>
-                  <span className="text-3xl font-black italic text-slate-700/50">02</span>
+                  <span className="text-3xl font-black italic text-slate-700/60 font-mono">02</span>
                 </div>
 
                 {/* Family Photo Banner */}
-                <div className="relative mb-4">
+                <div className="relative mb-4 rounded-xl overflow-hidden border border-slate-800 shadow-md">
                   <PlanespottersPhoto
                     registration={top1Grouped.registrations?.[1] || top1Grouped.registrations?.[0] || ''}
                     aircraftModel={top1Grouped.familyGroup}
                     airline={top1Grouped.manufacturer}
                     badgeColor="amber"
-                    badgeLabel="Foto Família"
+                    badgeLabel="Família Líder"
                     photoIndex={1}
-                    className="h-36 w-full"
+                    className="h-38 w-full"
                   />
-                  <div className="absolute bottom-2 left-3 right-3 pointer-events-none z-10">
-                    <span className="text-[10px] text-amber-300 uppercase tracking-widest font-mono font-bold">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent pointer-events-none z-10" />
+                  <div className="absolute bottom-2.5 left-3 right-3 pointer-events-none z-20">
+                    <span className="text-[10px] text-amber-400 uppercase tracking-widest font-mono font-extrabold">
                       {top1Grouped.manufacturer}
                     </span>
                     <h4 className="text-lg font-bold text-white leading-tight drop-shadow-md">
@@ -259,23 +240,26 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                   </div>
                 </div>
 
-                <div className="mb-4 relative z-10">
-                  <p className="text-xs text-slate-400 truncate">{top1Grouped.description}</p>
-
-                  <div className="flex items-baseline gap-2 mt-2">
-                    <span className="text-3xl font-black text-amber-400 font-mono">
-                      {top1Grouped.count}
-                    </span>
-                    <span className="text-xs text-slate-400 font-medium">
-                      voos ({top1Grouped.percentage}%)
+                <div className="mb-3 relative z-10">
+                  <div className="flex items-baseline justify-between">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl font-black text-amber-400 font-mono">
+                        {top1Grouped.count}
+                      </span>
+                      <span className="text-xs text-slate-400 font-medium font-mono">
+                        voos
+                      </span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
+                      {top1Grouped.percentage}% do total
                     </span>
                   </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="w-full bg-slate-800 rounded-full h-1.5 mb-4 overflow-hidden">
+                <div className="w-full bg-slate-800 rounded-full h-2 mb-4 overflow-hidden p-0.5 border border-slate-700/50">
                   <div
-                    className="bg-amber-500 h-1.5 rounded-full"
+                    className="bg-gradient-to-r from-amber-500 to-orange-400 h-full rounded-full"
                     style={{ width: `${top1Grouped.percentage}%` }}
                   />
                 </div>
@@ -283,21 +267,21 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
             )}
 
             {/* Runners Up List */}
-            <div className="space-y-3 pt-4 border-t border-slate-800/80 relative z-10">
+            <div className="space-y-2.5 pt-4 border-t border-slate-800/80 relative z-10">
               {otherGrouped.map((item, idx) => (
                 <div
                   key={item.familyGroup}
-                  className="flex items-center justify-between opacity-90 hover:opacity-100 transition-opacity"
+                  className="flex items-center justify-between p-2 rounded-xl bg-slate-950/40 border border-slate-800/60 hover:bg-slate-800/40 transition-colors"
                 >
-                  <div className="flex items-center gap-2 text-xs truncate mr-2">
-                    <span className="w-4 text-slate-500 font-mono text-[10px]">
-                      {idx + 2}.
+                  <div className="flex items-center gap-2.5 text-xs">
+                    <span className="w-5 text-slate-400 font-mono font-bold text-[11px]">
+                      #{idx + 2}
                     </span>
-                    <span className="font-semibold text-slate-200 truncate">
+                    <span className="font-semibold text-slate-200">
                       {item.familyGroup}
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-slate-400 shrink-0">
+                  <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                     {item.count} voos
                   </span>
                 </div>
@@ -311,7 +295,7 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                 className="mt-4 pt-2 w-full text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center justify-center gap-1 border-t border-slate-800/60 transition-colors cursor-pointer"
               >
                 <span>
-                  {showAllGrouped ? 'Recolher' : `Ver todas (${groupedStats.length})`}
+                  {showAllGrouped ? 'Recolher' : `Ver todos (${groupedStats.length})`}
                 </span>
                 {showAllGrouped ? (
                   <ChevronUp className="w-3.5 h-3.5" />
@@ -321,41 +305,52 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
               </button>
             )}
           </div>
-        </div>
+        </motion.div>
 
-        {/* ================= COLUNA 3: FABRICANTES MAIS USADOS ================= */}
-        <div className="flex flex-col gap-3">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] px-1">
-            Fabricantes
-          </h3>
+        {/* ================= COLUNA 3: FABRICANTES ================= */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.25 }}
+          className="flex flex-col gap-3"
+        >
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
+              <Factory className="w-3.5 h-3.5 text-purple-400" /> Fabricantes
+            </h3>
+            <span className="text-[10px] font-mono font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+              {manufacturerStats.length} Marcas
+            </span>
+          </div>
 
-          <div className="flex-1 bg-slate-900/40 border border-cyan-500/30 rounded-2xl p-5 flex flex-col justify-between shadow-[0_0_20px_rgba(6,182,212,0.08)] relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex-1 bg-slate-900/70 border border-purple-500/30 rounded-2xl p-5 flex flex-col justify-between shadow-[0_10px_30px_rgba(168,85,247,0.12)] relative overflow-hidden backdrop-blur-xl group hover:border-purple-500/50 transition-all duration-300">
+            <div className="absolute top-0 right-0 w-36 h-36 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* Featured Card #1 with Manufacturer Photo */}
             {top1Manufacturer && (
               <div>
                 <div className="flex items-center justify-between mb-3 relative z-10">
-                  <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
-                    <Factory className="w-3.5 h-3.5" /> Principal Fabricante
+                  <span className="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1.5 bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">
+                    <Factory className="w-3.5 h-3.5 text-purple-400" /> Fabricante Líder
                   </span>
-                  <span className="text-3xl font-black italic text-slate-700/50">03</span>
+                  <span className="text-3xl font-black italic text-slate-700/60 font-mono">03</span>
                 </div>
 
                 {/* Manufacturer Photo Banner */}
-                <div className="relative mb-4">
+                <div className="relative mb-4 rounded-xl overflow-hidden border border-slate-800 shadow-md">
                   <PlanespottersPhoto
-                    registration={top1Manufacturer.registrations?.[2] || top1Manufacturer.registrations?.[0] || ''}
-                    aircraftModel={top1Manufacturer.topModel || top1Manufacturer.name}
+                    registration={top1Manufacturer.registrations?.[0] || ''}
+                    aircraftModel={top1Manufacturer.name}
                     airline={top1Manufacturer.name}
-                    badgeColor="cyan"
-                    badgeLabel="Foto Indústria"
+                    badgeColor="purple"
+                    badgeLabel="Maior Frota"
                     photoIndex={2}
-                    className="h-36 w-full"
+                    className="h-38 w-full"
                   />
-                  <div className="absolute bottom-2 left-3 right-3 pointer-events-none z-10">
-                    <span className="text-[10px] text-cyan-300 uppercase tracking-widest font-mono font-bold">
-                      Indústria Aeronáutica
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent pointer-events-none z-10" />
+                  <div className="absolute bottom-2.5 left-3 right-3 pointer-events-none z-20">
+                    <span className="text-[10px] text-purple-400 uppercase tracking-widest font-mono font-extrabold">
+                      INDÚSTRIA AERONÁUTICA
                     </span>
                     <h4 className="text-lg font-bold text-white leading-tight drop-shadow-md">
                       {top1Manufacturer.name}
@@ -363,25 +358,26 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
                   </div>
                 </div>
 
-                <div className="mb-4 relative z-10">
-                  <p className="text-xs text-slate-400">
-                    Mais voado: <strong className="text-slate-200">{top1Manufacturer.topModel}</strong>
-                  </p>
-
-                  <div className="flex items-baseline gap-2 mt-2">
-                    <span className="text-3xl font-black text-cyan-400 font-mono">
-                      {top1Manufacturer.count}
-                    </span>
-                    <span className="text-xs text-slate-400 font-medium">
-                      voos ({top1Manufacturer.percentage}%)
+                <div className="mb-3 relative z-10">
+                  <div className="flex items-baseline justify-between">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl font-black text-purple-400 font-mono">
+                        {top1Manufacturer.count}
+                      </span>
+                      <span className="text-xs text-slate-400 font-medium font-mono">
+                        voos
+                      </span>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-slate-300 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
+                      {top1Manufacturer.percentage}% do total
                     </span>
                   </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="w-full bg-slate-800 rounded-full h-1.5 mb-4 overflow-hidden">
+                <div className="w-full bg-slate-800 rounded-full h-2 mb-4 overflow-hidden p-0.5 border border-slate-700/50">
                   <div
-                    className="bg-cyan-500 h-1.5 rounded-full"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-full rounded-full"
                     style={{ width: `${top1Manufacturer.percentage}%` }}
                   />
                 </div>
@@ -389,22 +385,22 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
             )}
 
             {/* Runners Up List */}
-            <div className="space-y-3 pt-4 border-t border-slate-800/80 relative z-10">
+            <div className="space-y-2.5 pt-4 border-t border-slate-800/80 relative z-10">
               {otherManufacturers.map((item, idx) => (
                 <div
                   key={item.name}
-                  className="flex items-center justify-between opacity-90 hover:opacity-100 transition-opacity"
+                  className="flex items-center justify-between p-2 rounded-xl bg-slate-950/40 border border-slate-800/60 hover:bg-slate-800/40 transition-colors"
                 >
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="w-4 text-slate-500 font-mono text-[10px]">
-                      {idx + 2}.
+                  <div className="flex items-center gap-2.5 text-xs">
+                    <span className="w-5 text-slate-400 font-mono font-bold text-[11px]">
+                      #{idx + 2}
                     </span>
                     <span className="font-semibold text-slate-200">
                       {item.name}
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-slate-400">
-                    {item.percentage}% share
+                  <span className="text-xs font-mono font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                    {item.count} voos
                   </span>
                 </div>
               ))}
@@ -414,10 +410,12 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
             {manufacturerStats.length > 3 && (
               <button
                 onClick={() => setShowAllManufacturers(!showAllManufacturers)}
-                className="mt-4 pt-2 w-full text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center justify-center gap-1 border-t border-slate-800/60 transition-colors cursor-pointer"
+                className="mt-4 pt-2 w-full text-xs font-semibold text-purple-400 hover:text-purple-300 flex items-center justify-center gap-1 border-t border-slate-800/60 transition-colors cursor-pointer"
               >
                 <span>
-                  {showAllManufacturers ? 'Recolher' : `Ver todos (${manufacturerStats.length})`}
+                  {showAllManufacturers
+                    ? 'Recolher'
+                    : `Ver todos (${manufacturerStats.length})`}
                 </span>
                 {showAllManufacturers ? (
                   <ChevronUp className="w-3.5 h-3.5" />
@@ -427,9 +425,8 @@ export const AircraftColumns: React.FC<AircraftColumnsProps> = ({ flights }) => 
               </button>
             )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
 };
-

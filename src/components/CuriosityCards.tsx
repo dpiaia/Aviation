@@ -26,6 +26,7 @@ import {
 } from '../utils/aircraftRegistrationData';
 import { PlanespottersPhoto } from './PlanespottersPhoto';
 import { getAirlineLogo } from '../utils/airlineLogos';
+import { AirlineLogo } from './AirlineLogo';
 
 interface CuriosityCardsProps {
   flights: Flight[];
@@ -90,22 +91,12 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                 <div>
                   {/* Top Ticket Header Banner */}
                   <div className="bg-slate-900 text-white p-3 flex items-center justify-between border-b border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-6 h-6 rounded-md flex items-center justify-center p-0.5"
-                        style={{ backgroundColor: logo.brandColor }}
-                      >
-                        <img
-                          src={logo.logoUrl}
-                          alt={item.airline}
-                          referrerPolicy="no-referrer"
-                          className="max-h-full max-w-full object-contain filter brightness-110"
-                        />
-                      </div>
-                      <span className="text-xs font-bold truncate max-w-[140px]">
-                        {logo.shortName}
-                      </span>
-                    </div>
+                    <AirlineLogo
+                      airline={item.airline}
+                      size="sm"
+                      isLightBackground={false}
+                      showName={true}
+                    />
 
                     <span className="text-xs font-mono font-extrabold bg-amber-500 text-slate-950 px-2 py-0.5 rounded shadow">
                       #{idx + 1} • {item.registration}
@@ -317,20 +308,12 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                         <span className="font-mono text-[11px] font-semibold text-slate-500">
                           Companhia Principal:
                         </span>
-                        <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                          <div
-                            className="w-4 h-4 rounded flex items-center justify-center p-0.5"
-                            style={{ backgroundColor: logo.brandColor }}
-                          >
-                            <img
-                              src={logo.logoUrl}
-                              alt={route.primaryAirline}
-                              referrerPolicy="no-referrer"
-                              className="max-h-full max-w-full object-contain filter brightness-110"
-                            />
-                          </div>
-                          <span>{logo.shortName}</span>
-                        </div>
+                        <AirlineLogo
+                          airline={route.primaryAirline}
+                          size="md"
+                          isLightBackground={true}
+                          showName={false}
+                        />
                       </div>
 
                       <div className="flex items-center justify-between text-slate-600 pt-1.5 border-t border-slate-200/60">
@@ -397,22 +380,12 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                 <div>
                   {/* Top Ticket Header Banner */}
                   <div className="bg-slate-900 text-white p-3 flex items-center justify-between border-b border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-6 h-6 rounded-md flex items-center justify-center p-0.5"
-                        style={{ backgroundColor: logo.brandColor }}
-                      >
-                        <img
-                          src={logo.logoUrl}
-                          alt={rec.flight.airline}
-                          referrerPolicy="no-referrer"
-                          className="max-h-full max-w-full object-contain filter brightness-110"
-                        />
-                      </div>
-                      <span className="text-xs font-bold truncate max-w-[140px]">
-                        {logo.shortName}
-                      </span>
-                    </div>
+                    <AirlineLogo
+                      airline={rec.flight.airline}
+                      size="sm"
+                      isLightBackground={false}
+                      showName={true}
+                    />
 
                     <span className={`text-xs font-mono font-extrabold text-white px-2 py-0.5 rounded shadow ${badgeTheme.bg}`}>
                       {badgeTheme.label}
@@ -546,22 +519,12 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                 <div>
                   {/* Top Ticket Header Banner */}
                   <div className="bg-slate-900 text-white p-3 flex items-center justify-between border-b border-slate-800">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-6 h-6 rounded-md flex items-center justify-center p-0.5"
-                        style={{ backgroundColor: logo.brandColor }}
-                      >
-                        <img
-                          src={logo.logoUrl}
-                          alt={age.flight.airline}
-                          referrerPolicy="no-referrer"
-                          className="max-h-full max-w-full object-contain filter brightness-110"
-                        />
-                      </div>
-                      <span className="text-xs font-bold truncate max-w-[140px]">
-                        {logo.shortName}
-                      </span>
-                    </div>
+                    <AirlineLogo
+                      airline={age.flight.airline}
+                      size="sm"
+                      isLightBackground={false}
+                      showName={true}
+                    />
 
                     <span className={`text-xs font-mono font-extrabold text-white px-2 py-0.5 rounded shadow ${badgeTheme.bg}`}>
                       {badgeTheme.label}
@@ -719,17 +682,12 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                       <span className="text-[10px] uppercase font-mono font-bold text-amber-600 flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5" /> Companhia Aérea Principal
                       </span>
-                      <div
-                        className="w-7 h-7 rounded-lg p-1 flex items-center justify-center shadow-sm"
-                        style={{ backgroundColor: logo.brandColor }}
-                      >
-                        <img
-                          src={logo.logoUrl}
-                          alt={extraCuriosities.topAirline.name}
-                          referrerPolicy="no-referrer"
-                          className="max-h-full max-w-full object-contain filter brightness-110"
-                        />
-                      </div>
+                      <AirlineLogo
+                        airline={extraCuriosities.topAirline.name}
+                        size="md"
+                        isLightBackground={true}
+                        showName={false}
+                      />
                     </div>
 
                     <div>
