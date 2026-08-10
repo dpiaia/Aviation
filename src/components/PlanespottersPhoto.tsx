@@ -146,28 +146,14 @@ export const PlanespottersPhoto: React.FC<PlanespottersPhotoProps> = ({
         clearTimeout(timeoutId);
         if (isMounted) {
           if (data && data.photos && data.photos.length > 0) {
-            let chosenPhoto = null;
-            if (data.photos.length > 1) {
-              const selectedIdx = Math.abs(photoIndex) % data.photos.length;
-              chosenPhoto = data.photos[selectedIdx];
-            } else if (photoIndex === 0) {
-              chosenPhoto = data.photos[0];
-            } else {
-              // If Planespotters only has 1 photo for this registration and photoIndex > 0,
-              // fallback to model pool indexed by photoIndex so we don't repeat the exact same image
-              chosenPhoto = null;
-            }
+            const selectedIdx = Math.abs(photoIndex) % data.photos.length;
+            const chosenPhoto = data.photos[selectedIdx] || data.photos[0];
+            const src = chosenPhoto.thumbnail_large?.src || chosenPhoto.thumbnail?.src;
 
-            if (chosenPhoto) {
-              const src = chosenPhoto.thumbnail_large?.src || chosenPhoto.thumbnail?.src;
-              if (src) {
-                setPhotoUrl(src);
-                setPhotographer(chosenPhoto.photographer || 'Planespotters.net');
-                setIsPlanespotters(true);
-              } else {
-                setPhotoUrl(getFallbackImage(aircraftModel, airline, photoIndex));
-                setIsPlanespotters(false);
-              }
+            if (src) {
+              setPhotoUrl(src);
+              setPhotographer(chosenPhoto.photographer || 'Planespotters.net');
+              setIsPlanespotters(true);
             } else {
               setPhotoUrl(getFallbackImage(aircraftModel, airline, photoIndex));
               setIsPlanespotters(false);

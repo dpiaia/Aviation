@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                Aviation Diary <span className="text-blue-500 opacity-50 font-normal text-sm">v2.4</span>
+                Denis Piaia Aviation Diary <span className="text-blue-500 opacity-50 font-normal text-sm">v2.4</span>
               </h1>
               <p className="text-xs text-slate-400 hidden sm:block">
                 Diário de Bordo & Análise Estatística Integrada
