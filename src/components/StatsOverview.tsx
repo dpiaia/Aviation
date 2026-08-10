@@ -132,17 +132,14 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights }) => {
             {/* Middle Row: Main Metric / Content */}
             <div className="relative z-10 my-1 flex items-center justify-between gap-3">
               {isAirlineCard ? (
-                <div className="flex flex-col gap-1.5">
-                  {/* White Container for Airline Logo */}
+                <div className="flex items-center my-1">
+                  {/* White Container for Airline Logo with tooltip */}
                   <AirlineLogo
                     airline={stat.value}
                     size="lg"
                     isLightBackground={false}
                     showName={false}
                   />
-                  <span className="text-sm font-bold text-slate-200 mt-1">
-                    {stat.value}
-                  </span>
                 </div>
               ) : (
                 <div>

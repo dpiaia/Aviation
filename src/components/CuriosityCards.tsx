@@ -95,7 +95,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                       airline={item.airline}
                       size="sm"
                       isLightBackground={false}
-                      showName={true}
+                      showName={false}
                     />
 
                     <span className="text-xs font-mono font-extrabold bg-amber-500 text-slate-950 px-2 py-0.5 rounded shadow">
@@ -384,7 +384,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                       airline={rec.flight.airline}
                       size="sm"
                       isLightBackground={false}
-                      showName={true}
+                      showName={false}
                     />
 
                     <span className={`text-xs font-mono font-extrabold text-white px-2 py-0.5 rounded shadow ${badgeTheme.bg}`}>
@@ -523,7 +523,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
                       airline={age.flight.airline}
                       size="sm"
                       isLightBackground={false}
-                      showName={true}
+                      showName={false}
                     />
 
                     <span className={`text-xs font-mono font-extrabold text-white px-2 py-0.5 rounded shadow ${badgeTheme.bg}`}>

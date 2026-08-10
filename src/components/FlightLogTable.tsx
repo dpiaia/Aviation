@@ -235,7 +235,7 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
                         airline={f.airline}
                         size="sm"
                         isLightBackground={false}
-                        showName={true}
+                        showName={false}
                       />
                     ) : (
                       '-'
