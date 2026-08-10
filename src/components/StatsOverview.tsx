@@ -7,9 +7,10 @@ import { AirlineLogo } from './AirlineLogo';
 
 interface StatsOverviewProps {
   flights: Flight[];
+  isDarkMode?: boolean;
 }
 
-export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights }) => {
+export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights, isDarkMode = true }) => {
   // 1. Total Flights
   const totalFlights = flights.length;
 
@@ -113,18 +114,26 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: idx * 0.08 }}
             whileHover={{ y: -4 }}
-            className={`relative p-5 rounded-2xl bg-slate-900/70 border ${stat.accentColor} shadow-[0_8px_25px_rgba(0,0,0,0.4)] backdrop-blur-xl overflow-hidden group transition-all duration-300 flex flex-col justify-between`}
+            className={`relative p-5 rounded-2xl border ${stat.accentColor} ${
+              isDarkMode
+                ? 'bg-slate-900/70 shadow-[0_8px_25px_rgba(0,0,0,0.4)] text-white'
+                : 'bg-white/90 shadow-[0_4px_20px_rgba(0,0,0,0.06)] text-slate-900'
+            } backdrop-blur-xl overflow-hidden group transition-all duration-300 flex flex-col justify-between`}
           >
             {/* Ambient subtle glow background */}
             <div className={`absolute top-0 right-0 w-32 h-32 ${stat.glowColor} rounded-full blur-3xl pointer-events-none group-hover:scale-125 transition-transform duration-500`} />
 
             {/* Top Row: Eyebrow Title & Badge */}
             <div className="flex items-center justify-between mb-3 relative z-10">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest font-mono">
+              <p className={`text-[11px] font-bold uppercase tracking-widest font-mono ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                 {stat.title}
               </p>
-              <span className="text-[9px] font-mono font-extrabold px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700/80 shadow-sm flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+              <span className={`text-[9px] font-mono font-extrabold px-2 py-0.5 rounded-full border shadow-xs flex items-center gap-1 ${
+                isDarkMode
+                  ? 'bg-slate-800/90 text-slate-300 border-slate-700/80'
+                  : 'bg-slate-100 text-slate-700 border-slate-200'
+              }`}>
+                <Sparkles className="w-2.5 h-2.5 text-amber-500" />
                 {stat.badge}
               </span>
             </div>
@@ -133,22 +142,22 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights }) => {
             <div className="relative z-10 my-1 flex items-center justify-between gap-3">
               {isAirlineCard ? (
                 <div className="flex items-center my-1">
-                  {/* White Container for Airline Logo with tooltip */}
+                  {/* Container for Airline Logo with tooltip */}
                   <AirlineLogo
                     airline={stat.value}
                     size="lg"
-                    isLightBackground={false}
+                    isLightBackground={!isDarkMode}
                     showName={false}
                   />
                 </div>
               ) : (
                 <div>
                   <div className="flex items-baseline gap-1.5">
-                    <h3 className={`text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-mono`}>
+                    <h3 className={`text-3xl sm:text-4xl font-extrabold tracking-tight font-mono ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                       {stat.value}
                     </h3>
                     {stat.unit && (
-                      <span className="text-xs font-semibold text-slate-400 font-mono">
+                      <span className={`text-xs font-semibold font-mono ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                         {stat.unit}
                       </span>
                     )}
@@ -167,9 +176,11 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights }) => {
             </div>
 
             {/* Bottom Row: Subtext & Verification */}
-            <div className="pt-3 mt-2 border-t border-slate-800/80 flex items-center justify-between relative z-10 text-[11px] text-slate-400">
+            <div className={`pt-3 mt-2 border-t flex items-center justify-between relative z-10 text-[11px] ${
+              isDarkMode ? 'border-slate-800/80 text-slate-400' : 'border-slate-200 text-slate-500'
+            }`}>
               <span>{stat.subtext}</span>
-              <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
+              <ShieldCheck className={`w-3.5 h-3.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
             </div>
           </motion.div>
         );

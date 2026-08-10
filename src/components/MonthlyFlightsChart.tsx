@@ -54,20 +54,24 @@ export const MonthlyFlightsChart: React.FC<MonthlyFlightsChartProps> = ({
     if (active && payload && payload.length) {
       const monthObj = payload[0]?.payload;
       return (
-        <div className="p-3.5 bg-slate-950/95 text-white rounded-xl shadow-2xl border border-slate-700/80 text-xs backdrop-blur-md min-w-[190px]">
-          <p className="font-bold text-sm text-cyan-400 border-b border-slate-800 pb-1 mb-2">
+        <div className={`p-3.5 rounded-xl shadow-2xl border text-xs backdrop-blur-md min-w-[190px] ${
+          isDarkMode
+            ? 'bg-slate-950/95 text-white border-slate-700/80'
+            : 'bg-white/95 text-slate-900 border-slate-200 shadow-xl'
+        }`}>
+          <p className="font-bold text-sm text-cyan-500 border-b border-slate-700/40 pb-1 mb-2">
             {monthObj?.monthName}
           </p>
 
-          <div className="flex items-center justify-between font-semibold mb-2 text-slate-200">
+          <div className="flex items-center justify-between font-semibold mb-2">
             <span>Total Mês (Barras):</span>
-            <span className="px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 font-mono">
+            <span className="px-2 py-0.5 rounded bg-blue-600/20 text-blue-500 font-mono">
               {monthObj?.total} voos
             </span>
           </div>
 
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-            <p className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 mb-1">
+            <p className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               Voos por Ano:
             </p>
             {selectedYears.map((year) => {
@@ -77,7 +81,7 @@ export const MonthlyFlightsChart: React.FC<MonthlyFlightsChartProps> = ({
                 <div
                   key={year}
                   className={`flex items-center justify-between text-xs ${
-                    count > 0 ? 'text-slate-100 font-medium' : 'text-slate-500'
+                    count > 0 ? (isDarkMode ? 'text-slate-100 font-medium' : 'text-slate-800 font-medium') : 'text-slate-400'
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
@@ -103,23 +107,29 @@ export const MonthlyFlightsChart: React.FC<MonthlyFlightsChartProps> = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 shadow-[0_4px_25px_rgba(0,0,0,0.3)] backdrop-blur-md relative overflow-hidden"
+      className={`p-6 rounded-2xl border backdrop-blur-md relative overflow-hidden ${
+        isDarkMode
+          ? 'bg-slate-900/40 border-slate-800 shadow-[0_4px_25px_rgba(0,0,0,0.3)] text-white'
+          : 'bg-white/90 border-slate-200/90 shadow-md text-slate-900'
+      }`}
     >
       {/* Background Radial Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(30,58,138,0.15),transparent_50%)] pointer-events-none" />
 
       {/* Chart Header */}
-      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+      <div className={`relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b ${
+        isDarkMode ? 'border-slate-800/80' : 'border-slate-200'
+      }`}>
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-500 border border-blue-500/30 flex items-center justify-center">
               <Calendar className="w-4 h-4" />
             </div>
-            <h2 className="text-lg font-bold text-white">
+            <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               Atividade Mensal de Voos
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1 pl-10">
+          <p className={`text-xs mt-1 pl-10 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
             Análise comparativa mês a mês com gráficos de linhas por ano e barras acumuladas
           </p>
         </div>
@@ -130,8 +140,8 @@ export const MonthlyFlightsChart: React.FC<MonthlyFlightsChartProps> = ({
             onClick={() => setShowBars(!showBars)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
               showBars
-                ? 'bg-blue-600/20 border-blue-500/40 text-blue-400'
-                : 'bg-slate-800/60 border-slate-700 text-slate-400'
+                ? 'bg-blue-600/20 border-blue-500/40 text-blue-500'
+                : isDarkMode ? 'bg-slate-800/60 border-slate-700 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
             }`}
           >
             {showBars ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -140,14 +150,22 @@ export const MonthlyFlightsChart: React.FC<MonthlyFlightsChartProps> = ({
 
           <button
             onClick={selectAllYears}
-            className="px-3 py-1.5 rounded-xl bg-slate-800/60 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium transition-colors cursor-pointer"
+            className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
+              isDarkMode
+                ? 'bg-slate-800/60 hover:bg-slate-700 border-slate-700 text-slate-300'
+                : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+            }`}
           >
             Todos os Anos
           </button>
 
           <button
             onClick={selectRecentYears}
-            className="px-3 py-1.5 rounded-xl bg-slate-800/60 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium transition-colors cursor-pointer"
+            className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
+              isDarkMode
+                ? 'bg-slate-800/60 hover:bg-slate-700 border-slate-700 text-slate-300'
+                : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+            }`}
           >
             2024-2026
           </button>
@@ -155,9 +173,11 @@ export const MonthlyFlightsChart: React.FC<MonthlyFlightsChartProps> = ({
       </div>
 
       {/* Year Filter Badges */}
-      <div className="relative z-10 flex flex-wrap items-center gap-2 py-3 border-b border-slate-800/80">
-        <span className="text-xs font-semibold text-slate-400 flex items-center gap-1 mr-1">
-          <Filter className="w-3.5 h-3.5 text-blue-400" /> Anos:
+      <div className={`relative z-10 flex flex-wrap items-center gap-2 py-3 border-b ${
+        isDarkMode ? 'border-slate-800/80' : 'border-slate-200'
+      }`}>
+        <span className={`text-xs font-semibold flex items-center gap-1 mr-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+          <Filter className="w-3.5 h-3.5 text-blue-500" /> Anos:
         </span>
         {allYears.map((year) => {
           const isSelected = selectedYears.includes(year);
@@ -169,7 +189,7 @@ export const MonthlyFlightsChart: React.FC<MonthlyFlightsChartProps> = ({
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                 isSelected
                   ? 'text-white shadow-[0_0_12px_rgba(34,211,238,0.2)] border border-white/20'
-                  : 'bg-slate-800/50 text-slate-500 hover:text-slate-300 border border-transparent'
+                  : isDarkMode ? 'bg-slate-800/50 text-slate-400 hover:text-slate-200 border border-transparent' : 'bg-slate-200/70 text-slate-600 hover:text-slate-900 border border-transparent'
               }`}
               style={{
                 backgroundColor: isSelected ? color : undefined,
@@ -195,16 +215,16 @@ export const MonthlyFlightsChart: React.FC<MonthlyFlightsChartProps> = ({
             <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
-              stroke="#1e293b"
+              stroke={isDarkMode ? '#1e293b' : '#e2e8f0'}
             />
             <XAxis
               dataKey="monthShort"
-              stroke="#94a3b8"
+              stroke={isDarkMode ? '#94a3b8' : '#64748b'}
               tick={{ fontSize: 11, fontWeight: 600 }}
-              axisLine={{ stroke: '#334155' }}
+              axisLine={{ stroke: isDarkMode ? '#334155' : '#cbd5e1' }}
             />
             <YAxis
-              stroke="#94a3b8"
+              stroke={isDarkMode ? '#94a3b8' : '#64748b'}
               tick={{ fontSize: 11 }}
               axisLine={false}
               allowDecimals={false}

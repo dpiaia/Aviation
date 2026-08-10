@@ -1,6 +1,6 @@
 {
-  "name": "Denis Piaia Aviation Diary",
-  "description": "Dashboard interativo de diário de voos com estatísticas de aeronaves, fabricantes e distribuição mensal.",
+  "name": "FlyDiary",
+  "description": "Diário de Bordo Digital & Plataforma de Análise de Voos Multi-usuário com Importação de MyFlightradar24, Excel e Inserção Manual.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

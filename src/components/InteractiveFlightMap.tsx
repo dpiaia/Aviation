@@ -9,6 +9,7 @@ import { parseAirport, AirportLocation } from '../utils/airportCoordinates';
 interface InteractiveFlightMapProps {
   flights: Flight[];
   onSelectAirport?: (airport: string) => void;
+  isDarkMode?: boolean;
 }
 
 interface RouteStat {
@@ -21,10 +22,11 @@ interface RouteStat {
   recentDate: string;
 }
 
-export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFlightMapProps) {
+export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = true }: InteractiveFlightMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
 
   // Filters
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
@@ -145,12 +147,6 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
         attributionControl: false,
       });
 
-      // Add CartoDB Dark Matter Tile Layer
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd',
-        maxZoom: 18,
-      }).addTo(map);
-
       // Add Zoom Control at bottom right
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -165,6 +161,27 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
       }
     };
   }, []);
+
+  // Sync tile layer on isDarkMode change
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+    }
+
+    const tileUrl = isDarkMode
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+    const newTileLayer = L.tileLayer(tileUrl, {
+      subdomains: 'abcd',
+      maxZoom: 18,
+    }).addTo(map);
+
+    tileLayerRef.current = newTileLayer;
+  }, [isDarkMode]);
 
   // Render Markers & Route Lines on Filter or Mode Change
   useEffect(() => {
@@ -302,23 +319,29 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 shadow-[0_4px_25px_rgba(0,0,0,0.3)] backdrop-blur-md relative overflow-hidden mb-8"
+      className={`p-6 rounded-2xl border backdrop-blur-md relative overflow-hidden mb-8 ${
+        isDarkMode
+          ? 'bg-slate-900/40 border-slate-800 shadow-[0_4px_25px_rgba(0,0,0,0.3)] text-white'
+          : 'bg-white/90 border-slate-200/90 shadow-md text-slate-900'
+      }`}
     >
       {/* Background Radial Glow */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Map Header */}
-      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className={`relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b ${
+        isDarkMode ? 'border-slate-800' : 'border-slate-200'
+      }`}>
         <div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-500 border border-blue-500/30 flex items-center justify-center">
               <MapIcon className="w-4 h-4" />
             </div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <h2 className={`text-lg font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               Mapa Interativo de Rotas e Trajetos
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1 pl-10">
+          <p className={`text-xs mt-1 pl-10 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
             Visualização geoespacial das conexões aéreas, rotas voadas e malha de aeroportos
           </p>
         </div>
@@ -326,13 +349,15 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Mode switch */}
-          <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1">
+          <div className={`flex items-center border rounded-xl p-1 ${
+            isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
+          }`}>
             <button
               onClick={() => setMapMode('routes')}
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 mapMode === 'routes'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Rotas Aéreas
@@ -341,8 +366,8 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
               onClick={() => setMapMode('nodes')}
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 mapMode === 'nodes'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Aeroportos
@@ -351,7 +376,11 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
 
           <button
             onClick={handleResetMap}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-medium transition-colors cursor-pointer"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
+              isDarkMode
+                ? 'bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-300'
+                : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+            }`}
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Resetar Visão</span>
@@ -360,17 +389,23 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
       </div>
 
       {/* Filter Bar */}
-      <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 py-3 border-b border-slate-800 text-xs">
+      <div className={`relative z-10 flex flex-wrap items-center justify-between gap-3 py-3 border-b text-xs ${
+        isDarkMode ? 'border-slate-800' : 'border-slate-200'
+      }`}>
         <div className="flex flex-wrap items-center gap-3">
-          <span className="font-semibold text-slate-400 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5 text-blue-400" /> Filtros:
+          <span className={`font-semibold flex items-center gap-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            <Filter className="w-3.5 h-3.5 text-blue-500" /> Filtros:
           </span>
 
           {/* Year Select */}
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1 text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+            className={`border rounded-xl px-3 py-1 focus:outline-none focus:border-blue-500 font-mono ${
+              isDarkMode
+                ? 'bg-slate-950 border-slate-800 text-slate-200'
+                : 'bg-slate-100 border-slate-200 text-slate-800'
+            }`}
           >
             <option value="ALL">Todos os Anos</option>
             {availableYears.map((y) => (
@@ -384,7 +419,11 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
           <select
             value={selectedAirline}
             onChange={(e) => setSelectedAirline(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1 text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+            className={`border rounded-xl px-3 py-1 focus:outline-none focus:border-blue-500 font-mono ${
+              isDarkMode
+                ? 'bg-slate-950 border-slate-800 text-slate-200'
+                : 'bg-slate-100 border-slate-200 text-slate-800'
+            }`}
           >
             <option value="ALL">Todas as Companhias</option>
             {availableAirlines.map((a) => (
@@ -398,7 +437,11 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
           <select
             value={selectedAirportIata}
             onChange={(e) => setSelectedAirportIata(e.target.value)}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1 text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+            className={`border rounded-xl px-3 py-1 focus:outline-none focus:border-blue-500 font-mono ${
+              isDarkMode
+                ? 'bg-slate-950 border-slate-800 text-slate-200'
+                : 'bg-slate-100 border-slate-200 text-slate-800'
+            }`}
           >
             <option value="ALL">Todos os Aeroportos</option>
             {Array.from(airportsMap.values()).map((ap: { info: AirportLocation; totalCount: number }) => (
@@ -410,14 +453,18 @@ export function InteractiveFlightMap({ flights, onSelectAirport }: InteractiveFl
         </div>
 
         {/* Quick KPI stats pill */}
-        <div className="flex items-center gap-3 font-mono text-[11px] text-slate-400">
-          <span className="flex items-center gap-1 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">
-            <Building2 className="w-3 h-3 text-blue-400" />
-            <strong className="text-white">{airportsMap.size}</strong> Aeroportos
+        <div className={`flex items-center gap-3 font-mono text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+          <span className={`flex items-center gap-1 border px-2.5 py-1 rounded-lg ${
+            isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
+          }`}>
+            <Building2 className="w-3 h-3 text-blue-500" />
+            <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{airportsMap.size}</strong> Aeroportos
           </span>
-          <span className="flex items-center gap-1 bg-slate-950 border border-slate-800 px-2.5 py-1 rounded-lg">
-            <Navigation className="w-3 h-3 text-amber-400" />
-            <strong className="text-white">{totalRoutesCount}</strong> Rotas Únicas
+          <span className={`flex items-center gap-1 border px-2.5 py-1 rounded-lg ${
+            isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
+          }`}>
+            <Navigation className="w-3 h-3 text-amber-500" />
+            <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{totalRoutesCount}</strong> Rotas Únicas
           </span>
         </div>
       </div>

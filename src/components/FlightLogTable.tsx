@@ -19,9 +19,10 @@ import { parseAirportCodes } from '../utils/airportDb';
 interface FlightLogTableProps {
   flights: Flight[];
   onSelectAirport?: (airport: string) => void;
+  isDarkMode?: boolean;
 }
 
-export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelectAirport }) => {
+export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelectAirport, isDarkMode = true }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAirline, setSelectedAirline] = useState('ALL');
   const [selectedYear, setSelectedYear] = useState('ALL');
@@ -93,15 +94,21 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
-      className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 shadow-[0_4px_25px_rgba(0,0,0,0.3)] backdrop-blur-md relative overflow-hidden mb-12"
+      className={`p-6 rounded-2xl border shadow-lg backdrop-blur-md relative overflow-hidden mb-12 transition-all ${
+        isDarkMode
+          ? 'bg-slate-900/40 border-slate-800 shadow-[0_4px_25px_rgba(0,0,0,0.3)] text-slate-100'
+          : 'bg-white/90 border-slate-200 shadow-[0_4px_20px_rgba(0,0,0,0.05)] text-slate-800'
+      }`}
     >
       {/* Table Header & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b ${
+        isDarkMode ? 'border-slate-800' : 'border-slate-200'
+      }`}>
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-blue-400" /> Histórico de Voos ({filteredFlights.length})
+          <h2 className={`text-lg font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            <Calendar className="w-5 h-5 text-blue-500" /> Histórico de Voos ({filteredFlights.length})
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
             Registro detalhado de cada rota, horário, assento e observações de voo.
           </p>
         </div>
@@ -110,7 +117,7 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
         <div className="flex flex-wrap items-center gap-2">
           {/* Search Input */}
           <div className="relative min-w-[200px]">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
             <input
               type="text"
               value={searchTerm}
@@ -119,7 +126,11 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
                 setCurrentPage(1);
               }}
               placeholder="Buscar voo, rota, aeronave..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-950/80 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              className={`w-full pl-9 pr-3 py-1.5 text-xs border rounded-xl focus:outline-none focus:border-blue-500 ${
+                isDarkMode
+                  ? 'bg-slate-950/80 border-slate-800 text-white placeholder-slate-500'
+                  : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
+              }`}
             />
           </div>
 
@@ -130,7 +141,11 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
               setSelectedAirline(e.target.value);
               setCurrentPage(1);
             }}
-            className="px-3 py-1.5 text-xs bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300 focus:outline-none focus:border-blue-500"
+            className={`px-3 py-1.5 text-xs border rounded-xl focus:outline-none focus:border-blue-500 ${
+              isDarkMode
+                ? 'bg-slate-950/80 border-slate-800 text-slate-300'
+                : 'bg-slate-50 border-slate-200 text-slate-700'
+            }`}
           >
             <option value="ALL">Todas as Cias</option>
             {airlines.map((a) => (
@@ -147,7 +162,11 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
               setSelectedYear(e.target.value);
               setCurrentPage(1);
             }}
-            className="px-3 py-1.5 text-xs bg-slate-950/80 border border-slate-800 rounded-xl text-slate-300 focus:outline-none focus:border-blue-500"
+            className={`px-3 py-1.5 text-xs border rounded-xl focus:outline-none focus:border-blue-500 ${
+              isDarkMode
+                ? 'bg-slate-950/80 border-slate-800 text-slate-300'
+                : 'bg-slate-50 border-slate-200 text-slate-700'
+            }`}
           >
             <option value="ALL">Todos os Anos</option>
             {years.map((y) => (
@@ -163,7 +182,9 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
       <div className="overflow-x-auto mt-4">
         <table className="w-full text-left text-xs">
           <thead>
-            <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider font-mono text-[11px]">
+            <tr className={`border-b uppercase tracking-wider font-mono text-[11px] ${
+              isDarkMode ? 'border-slate-800 text-slate-400' : 'border-slate-200 text-slate-500'
+            }`}>
               <th className="py-3 px-3">Data</th>
               <th className="py-3 px-3">Voo</th>
               <th className="py-3 px-3">Origem & Destino</th>
@@ -174,12 +195,16 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
               <th className="py-3 px-3">Nota</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className={`divide-y ${isDarkMode ? 'divide-slate-800/60' : 'divide-slate-100'}`}>
             {paginatedFlights.length > 0 ? (
               paginatedFlights.map((f) => (
                 <tr
                   key={f.id}
-                  className="hover:bg-slate-800/40 text-slate-200 transition-colors"
+                  className={`transition-colors ${
+                    isDarkMode
+                      ? 'hover:bg-slate-800/40 text-slate-200'
+                      : 'hover:bg-slate-50 text-slate-800'
+                  }`}
                 >
                   {/* Date */}
                   <td className="py-3 px-3 font-mono text-slate-300 whitespace-nowrap">

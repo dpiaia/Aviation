@@ -1,14 +1,22 @@
 import React from 'react';
 
-export const DottedWorldMapBackground: React.FC = () => {
+interface DottedWorldMapBackgroundProps {
+  isDarkMode?: boolean;
+}
+
+export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> = ({ isDarkMode = true }) => {
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#020617]">
+    <div className={`fixed inset-0 pointer-events-none z-0 overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#020617]' : 'bg-slate-50'}`}>
       {/* Radial Gradient Base Spotlight */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900/60 via-[#020617]/90 to-[#020617]" />
+      <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] ${
+        isDarkMode
+          ? 'from-slate-900/60 via-[#020617]/90 to-[#020617]'
+          : 'from-blue-100/50 via-slate-100/80 to-slate-50'
+      }`} />
 
       {/* SVG Container mapped to 1000x500 aspect canvas */}
       <svg
-        className="absolute inset-0 w-full h-full opacity-45 sm:opacity-55"
+        className={`absolute inset-0 w-full h-full ${isDarkMode ? 'opacity-45 sm:opacity-55' : 'opacity-65 sm:opacity-75'}`}
         viewBox="0 0 1000 500"
         preserveAspectRatio="xMidYMid slice"
         xmlns="http://www.w3.org/2000/svg"
@@ -21,7 +29,7 @@ export const DottedWorldMapBackground: React.FC = () => {
             height="20"
             patternUnits="userSpaceOnUse"
           >
-            <circle cx="2" cy="2" r="1.1" fill="#334155" opacity="0.6" />
+            <circle cx="2" cy="2" r="1.1" fill={isDarkMode ? '#334155' : '#cbd5e1'} opacity={isDarkMode ? '0.6' : '0.8'} />
           </pattern>
 
           {/* Gradients for Contrails */}

@@ -31,9 +31,10 @@ import { AirlineLogo } from './AirlineLogo';
 interface CuriosityCardsProps {
   flights: Flight[];
   onSelectAirport?: (airport: string) => void;
+  isDarkMode?: boolean;
 }
 
-export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelectAirport }) => {
+export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelectAirport, isDarkMode = true }) => {
   const topRegistrations = computeTopRegistrations(flights);
   const flightRecords = computeFlightRecords(flights);
   const aircraftAges = computeAircraftAgeStats(flights);
@@ -43,22 +44,28 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
   return (
     <section className="mb-12 space-y-10">
       {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4 ${
+        isDarkMode ? 'border-slate-800/80' : 'border-slate-200'
+      }`}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-blue-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center shadow-lg">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-blue-500/20 border border-amber-500/30 text-amber-500 flex items-center justify-center shadow-lg">
             <Ticket className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <h2 className={`text-xl font-extrabold tracking-tight flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
               Bilhetes de Viagem & Curiosidades
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className={`text-xs ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
               Cartões no estilo bilhete de embarque com registros de voo, fotos de aeronaves e logotipos das cias
             </p>
           </div>
         </div>
 
-        <span className="self-start sm:self-auto text-xs font-mono font-semibold px-3 py-1 rounded-full bg-slate-900/90 text-amber-400 border border-amber-500/30">
+        <span className={`self-start sm:self-auto text-xs font-mono font-semibold px-3 py-1 rounded-full border ${
+          isDarkMode
+            ? 'bg-slate-900/90 text-amber-400 border-amber-500/30'
+            : 'bg-amber-50 text-amber-700 border-amber-200'
+        }`}>
           BOARDING PASS COLLECTION
         </span>
       </div>
@@ -66,8 +73,8 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
       {/* ROW 1: Top 3 Most Flown Aircraft by Registration */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Trophy className="w-4 h-4 text-amber-400" />
-          <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider font-mono">
+          <Trophy className="w-4 h-4 text-amber-500" />
+          <h3 className={`text-sm font-bold uppercase tracking-wider font-mono ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
             1. Aeronaves Mais Voadas (Classificando pelo Prefixo)
           </h3>
         </div>
@@ -211,7 +218,7 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
       <div className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
           <Waypoints className="w-4 h-4 text-[#EC6726]" />
-          <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider font-mono">
+          <h3 className={`text-sm font-bold uppercase tracking-wider font-mono ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
             2. As 3 Rotas Mais Frequentes (Trajetos Mais Voados)
           </h3>
         </div>
@@ -350,8 +357,8 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
       {/* ROW 3: Flight Records */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
-          <Compass className="w-4 h-4 text-blue-400" />
-          <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider font-mono">
+          <Compass className="w-4 h-4 text-blue-500" />
+          <h3 className={`text-sm font-bold uppercase tracking-wider font-mono ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
             3. Recordes de Voo (Mais Longo, Nacional e Mais Curto)
           </h3>
         </div>
@@ -490,8 +497,8 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
       {/* ROW 3: Aircraft Age Stats (2 Cards Only as Requested) */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-emerald-400" />
-          <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider font-mono">
+          <Clock className="w-4 h-4 text-emerald-500" />
+          <h3 className={`text-sm font-bold uppercase tracking-wider font-mono ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
             3. Idade das Aeronaves na Data do Voo (Geração de Frota)
           </h3>
         </div>
@@ -610,8 +617,8 @@ export const CuriosityCards: React.FC<CuriosityCardsProps> = ({ flights, onSelec
       {/* ROW 4: Extra Curiosities (Aeroporto, Cia Aérea, Profiling) */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
-          <Award className="w-4 h-4 text-cyan-400" />
-          <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider font-mono">
+          <Award className="w-4 h-4 text-cyan-500" />
+          <h3 className={`text-sm font-bold uppercase tracking-wider font-mono ${isDarkMode ? 'text-slate-200' : 'text-slate-700'}`}>
             4. Hábitos & Locais Mais Frequentados
           </h3>
         </div>

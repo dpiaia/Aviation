@@ -1,0 +1,28 @@
+{
+  "entities": {
+    "Flight": {
+      "title": "Flight",
+      "description": "User logged flight entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "flightNumber": { "type": "string" },
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "depTime": { "type": "string" },
+        "arrTime": { "type": "string" },
+        "duration": { "type": "string" },
+        "airline": { "type": "string" },
+        "aircraft": { "type": "string" },
+        "registration": { "type": "string" },
+        "seatNumber": { "type": "string" },
+        "seatType": { "type": "string" },
+        "flightClass": { "type": "string" },
+        "flightReason": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "required": ["id", "date", "from", "to"]
+    }
+  }
+}
