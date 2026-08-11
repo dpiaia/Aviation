@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Radio, Plane, RefreshCw, Filter, Globe2, Sparkles, Clock, Navigation, CheckCircle2, AlertTriangle, ChevronRight, X } from 'lucide-react';
+import { Radio, Plane, RefreshCw, Filter, Globe2, Sparkles, Clock, Navigation, CheckCircle2, AlertTriangle, ChevronRight, X, Barcode, MapPin, Gauge, Compass, Share2 } from 'lucide-react';
 
 export interface LiveFlight {
   id: string;
@@ -456,95 +456,158 @@ export const LiveDeparturesBoard: React.FC<LiveDeparturesBoardProps> = ({ isDark
         </div>
       </section>
 
-      {/* Flight Detail Popover Modal */}
+      {/* Flight Detail Popover Modal - Styled as Real Boarding Pass Card */}
       <AnimatePresence>
         {selectedFlight && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden font-sans"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl max-w-md w-full shadow-2xl relative overflow-hidden font-sans select-none"
             >
-              <button
-                onClick={() => setSelectedFlight(null)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              {/* Ticket Semicircle Cutouts */}
+              <div className="absolute -left-3.5 bottom-[72px] w-7 h-7 rounded-full border border-slate-800 bg-[#020617] z-20" />
+              <div className="absolute -right-3.5 bottom-[72px] w-7 h-7 rounded-full border border-slate-800 bg-[#020617] z-20" />
 
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EC6726] to-amber-500 text-white flex items-center justify-center shadow-lg font-bold">
-                  <Plane className="w-5 h-5 -rotate-45" />
+              {/* Boarding Pass Header Stub */}
+              <div className="bg-gradient-to-r from-[#EC6726] via-orange-500 to-amber-500 p-5 text-white relative">
+                <button
+                  onClick={() => setSelectedFlight(null)}
+                  className="absolute top-4 right-4 p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                <div className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-wider bg-black/20 w-fit px-2.5 py-1 rounded-md mb-2">
+                  <Radio className="w-3 h-3 text-amber-200 animate-pulse" />
+                  <span>CARTÃO DE EMBARQUE • DECOLAGEM AO VIVO</span>
                 </div>
-                <div>
-                  <span className="text-xl font-black font-mono text-amber-400 block leading-tight">
-                    {selectedFlight.code}
-                  </span>
-                  <span className="text-xs text-slate-400 font-semibold block">
-                    {selectedFlight.airline}
-                  </span>
-                </div>
-              </div>
 
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-4 font-mono space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-left">
-                    <span className="text-2xl font-black text-[#EC6726] block">{selectedFlight.originCode}</span>
-                    <span className="text-[11px] text-slate-400 font-sans block">{selectedFlight.originCity}</span>
-                  </div>
-
-                  <div className="flex-1 px-4 text-center">
-                    <Plane className="w-5 h-5 text-[#EC6726] mx-auto mb-1" />
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${selectedFlight.statusColor}`}>
-                      {selectedFlight.status}
+                <div className="flex items-end justify-between mt-2">
+                  <div>
+                    <span className="text-2xl font-black font-mono tracking-tight block leading-none text-white">
+                      {selectedFlight.code}
+                    </span>
+                    <span className="text-xs text-orange-100 font-semibold block mt-1">
+                      {selectedFlight.airline}
                     </span>
                   </div>
 
-                  <div className="text-right">
-                    <span className="text-2xl font-black text-[#EC6726] block">{selectedFlight.destCode}</span>
-                    <span className="text-[11px] text-slate-400 font-sans block">{selectedFlight.destCity}</span>
+                  <div className="text-right font-mono">
+                    <span className="text-[10px] text-amber-100 uppercase block font-bold">REGIÃO</span>
+                    <span className="text-xs font-extrabold text-white bg-black/20 px-2 py-0.5 rounded">
+                      {selectedFlight.region}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Boarding Pass Main Body */}
+              <div className="p-6 space-y-5">
+                {/* Route Path Display */}
+                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800/80 font-mono">
+                  <div className="flex items-center justify-between">
+                    <div className="text-left">
+                      <span className="text-3xl font-black text-[#EC6726] block tracking-tight">
+                        {selectedFlight.originCode}
+                      </span>
+                      <span className="text-xs text-slate-400 font-sans block font-medium">
+                        {selectedFlight.originCity}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 px-4 text-center">
+                      <div className="relative flex items-center justify-center my-1">
+                        <div className="border-t-2 border-dashed border-slate-700 w-full absolute" />
+                        <div className="w-8 h-8 rounded-full bg-[#EC6726]/20 border border-[#EC6726]/50 text-[#EC6726] flex items-center justify-center relative z-10 shadow-sm">
+                          <Plane className="w-4 h-4 -rotate-45" />
+                        </div>
+                      </div>
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border mt-1 uppercase ${selectedFlight.statusColor}`}>
+                        {selectedFlight.status}
+                      </span>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-3xl font-black text-[#EC6726] block tracking-tight">
+                        {selectedFlight.destCode}
+                      </span>
+                      <span className="text-xs text-slate-400 font-sans block font-medium">
+                        {selectedFlight.destCity}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800/80 grid grid-cols-2 gap-3 text-xs">
+                {/* Extra Flight Information Grid */}
+                <div className="grid grid-cols-2 gap-3.5 bg-slate-950/60 p-4 rounded-2xl border border-slate-800 text-xs font-mono">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase block">AERONAVE</span>
-                    <span className="font-bold text-slate-200">{selectedFlight.aircraft}</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">PARTIDA / TIME</span>
+                    <span className="font-bold text-sky-400 text-sm flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-sky-400" /> {selectedFlight.depTime}
+                    </span>
                   </div>
+
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase block">PREFIXO</span>
-                    <span className="font-bold text-amber-400">{selectedFlight.registration}</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">PORTÃO / TERMINAL</span>
+                    <span className="font-bold text-emerald-400 text-sm flex items-center gap-1">
+                      <Navigation className="w-3.5 h-3.5 text-emerald-400" /> {selectedFlight.terminal} / {selectedFlight.gate}
+                    </span>
                   </div>
+
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase block">PORTÃO</span>
-                    <span className="font-bold text-emerald-400">{selectedFlight.terminal} / {selectedFlight.gate}</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">AERONAVE / MODELO</span>
+                    <span className="font-bold text-slate-200 truncate block">
+                      {selectedFlight.aircraft}
+                    </span>
                   </div>
+
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase block">HORÁRIO</span>
-                    <span className="font-bold text-sky-400">{selectedFlight.depTime}</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">MATRÍCULA / REG</span>
+                    <span className="font-extrabold text-amber-400">
+                      {selectedFlight.registration}
+                    </span>
                   </div>
+
                   {selectedFlight.altitude && (
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase block">ALTITUDE DE VOO</span>
-                      <span className="font-bold text-cyan-400">{selectedFlight.altitude}</span>
+                      <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">ALTITUDE DE VOO</span>
+                      <span className="font-bold text-cyan-400 flex items-center gap-1">
+                        <Gauge className="w-3.5 h-3.5 text-cyan-400" /> {selectedFlight.altitude}
+                      </span>
                     </div>
                   )}
+
                   {selectedFlight.speed && (
                     <div>
-                      <span className="text-[10px] text-slate-500 uppercase block">VELOCIDADE</span>
-                      <span className="font-bold text-amber-300">{selectedFlight.speed}</span>
+                      <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">VELOCIDADE</span>
+                      <span className="font-bold text-amber-300 flex items-center gap-1">
+                        <Compass className="w-3.5 h-3.5 text-amber-300" /> {selectedFlight.speed}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <button
-                onClick={() => setSelectedFlight(null)}
-                className="w-full py-2.5 rounded-xl bg-[#EC6726] hover:bg-[#d9581d] text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
-              >
-                Fechar Detalhes
-              </button>
+              {/* Ticket Tear Line & Barcode Section */}
+              <div className="p-4 border-t border-dashed border-slate-800 bg-slate-950/80 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Barcode className="w-8 h-6 text-[#EC6726]" />
+                  <div className="font-mono text-[9px] text-slate-400 leading-tight">
+                    <span className="block font-bold text-slate-300">LIVE-RADAR-{selectedFlight.id.toUpperCase()}</span>
+                    <span>PASSENGER TICKET • OK</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setSelectedFlight(null)}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#EC6726] to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs font-mono uppercase tracking-wider transition-all cursor-pointer shadow-md shadow-[#EC6726]/20"
+                >
+                  Fechar Cartão
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
