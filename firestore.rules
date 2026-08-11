@@ -1,11 +1,59 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/flights/{flightId} {
-      allow read, write: if true;
+
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    match /{document=**} {
-      allow read, write: if true;
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+
+    // Dicionários públicos de leitura
+    match /airports/{airportId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /stickers/{stickerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /blisterTypes/{typeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Coleções de Usuário
+    match /users/{userId} {
+      allow read: if resource.data.isPublic == true || isOwner(userId);
+      allow write: if isOwner(userId) || isAdmin();
+
+      match /flights/{flightId} {
+        allow read: if isOwner(userId) || (get(/databases/$(database)/documents/users/$(userId)).data.isPublic == true && resource.data.isPrivate != true);
+        allow write: if isOwner(userId);
+      }
+
+      match /stats/{docId} {
+        allow read: if isOwner(userId) || get(/databases/$(database)/documents/users/$(userId)).data.shareStats == true;
+        allow write: if isOwner(userId);
+      }
+
+      match /blisterPacks/{packId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /collection/{stickerId} {
+        allow read: if isOwner(userId) || get(/databases/$(database)/documents/users/$(userId)).data.isPublic == true;
+        allow write: if isOwner(userId);
+      }
     }
   }
 }
+

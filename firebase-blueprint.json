@@ -1,5 +1,49 @@
 {
   "entities": {
+    "Airport": {
+      "title": "Airport",
+      "description": "Global airport dictionary for routes and autocompletes",
+      "type": "object",
+      "properties": {
+        "iata": { "type": "string" },
+        "icao": { "type": "string" },
+        "name": { "type": "string" },
+        "city": { "type": "string" },
+        "countryCode": { "type": "string" },
+        "countryName": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "timezone": { "type": "string" }
+      },
+      "required": ["iata", "name", "city", "countryCode", "lat", "lng"]
+    },
+    "Sticker": {
+      "title": "Sticker",
+      "description": "Collectible sticker metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "rarity": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "title", "category", "rarity", "imageUrl"]
+    },
+    "BlisterType": {
+      "title": "BlisterType",
+      "description": "Blister pack template type",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "stickersCount": { "type": "number" },
+        "coverImageUrl": { "type": "string" },
+        "guaranteedRarity": { "type": "string" }
+      },
+      "required": ["id", "name", "stickersCount"]
+    },
     "Flight": {
       "title": "Flight",
       "description": "User logged flight entry",
@@ -10,17 +54,31 @@
         "flightNumber": { "type": "string" },
         "from": { "type": "string" },
         "to": { "type": "string" },
+        "fromIata": { "type": "string" },
+        "toIata": { "type": "string" },
         "depTime": { "type": "string" },
         "arrTime": { "type": "string" },
         "duration": { "type": "string" },
+        "durationMinutes": { "type": "number" },
+        "distanceKm": { "type": "number" },
+        "isInternational": { "type": "boolean" },
         "airline": { "type": "string" },
+        "airlineCode": { "type": "string" },
+        "airlineName": { "type": "string" },
         "aircraft": { "type": "string" },
+        "aircraftFamily": { "type": "string" },
+        "manufacturer": { "type": "string" },
         "registration": { "type": "string" },
+        "aircraftAge": { "type": "number" },
         "seatNumber": { "type": "string" },
         "seatType": { "type": "string" },
         "flightClass": { "type": "string" },
         "flightReason": { "type": "string" },
-        "note": { "type": "string" }
+        "rating": { "type": "number" },
+        "notes": { "type": "string" },
+        "photos": { "type": "array", "items": { "type": "string" } },
+        "isPrivate": { "type": "boolean" },
+        "createdAt": { "type": "string" }
       },
       "required": ["id", "date", "from", "to"]
     },
@@ -29,28 +87,96 @@
       "description": "Registered FlyDiary user profile",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
+        "uid": { "type": "string" },
         "name": { "type": "string" },
+        "username": { "type": "string" },
         "email": { "type": "string" },
         "avatar": { "type": "string" },
         "provider": { "type": "string" },
-        "createdAt": { "type": "string" },
-        "lastActive": { "type": "string" },
-        "flightCount": { "type": "number" },
         "role": { "type": "string" },
-        "status": { "type": "string" }
+        "status": { "type": "string" },
+        "isPublic": { "type": "boolean" },
+        "shareStats": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "lastActive": { "type": "string" }
       },
-      "required": ["id", "name", "email"]
+      "required": ["uid", "name", "email"]
+    },
+    "UserStats": {
+      "title": "UserStats",
+      "description": "Aggregated stats for user flights",
+      "type": "object",
+      "properties": {
+        "totalFlights": { "type": "number" },
+        "totalDistanceKm": { "type": "number" },
+        "totalDurationMinutes": { "type": "number" },
+        "uniqueAirportsCount": { "type": "number" },
+        "uniqueCountriesCount": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "BlisterPack": {
+      "title": "BlisterPack",
+      "description": "User earned blister pack to open",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "blisterTypeId": { "type": "string" },
+        "obtainedFromFlightId": { "type": "string" },
+        "isOpened": { "type": "boolean" },
+        "openedAt": { "type": "string" },
+        "receivedStickers": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "blisterTypeId", "isOpened"]
+    },
+    "UserSticker": {
+      "title": "UserSticker",
+      "description": "Sticker owned by user in their album collection",
+      "type": "object",
+      "properties": {
+        "stickerId": { "type": "string" },
+        "category": { "type": "string" },
+        "quantity": { "type": "number" },
+        "isPasted": { "type": "boolean" },
+        "firstObtainedAt": { "type": "string" }
+      },
+      "required": ["stickerId", "quantity"]
     }
   },
   "firestore": {
+    "/airports": {
+      "schema": { "$ref": "#/entities/Airport" },
+      "description": "Global dictionary of airports"
+    },
+    "/stickers": {
+      "schema": { "$ref": "#/entities/Sticker" },
+      "description": "Global catalog of collectible stickers"
+    },
+    "/blisterTypes": {
+      "schema": { "$ref": "#/entities/BlisterType" },
+      "description": "Global catalog of blister pack types"
+    },
     "/users": {
       "schema": { "$ref": "#/entities/User" },
       "description": "Collection of registered users"
     },
     "/users/{userId}/flights": {
       "schema": { "$ref": "#/entities/Flight" },
-      "description": "Subcollection of flights logged by a specific user"
+      "description": "Subcollection of logged flights per user"
+    },
+    "/users/{userId}/stats": {
+      "schema": { "$ref": "#/entities/UserStats" },
+      "description": "Aggregated user stats"
+    },
+    "/users/{userId}/blisterPacks": {
+      "schema": { "$ref": "#/entities/BlisterPack" },
+      "description": "Unopened and opened blister packs earned by user"
+    },
+    "/users/{userId}/collection": {
+      "schema": { "$ref": "#/entities/UserSticker" },
+      "description": "User album sticker collection"
     }
   }
 }
+

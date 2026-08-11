@@ -4,21 +4,100 @@ export interface Flight {
   flightNumber: string;
   from: string;
   to: string;
+  fromIata?: string;
+  toIata?: string;
   depTime: string;
   arrTime: string;
   duration: string; // HH:MM:SS
+  durationMinutes?: number;
+  distanceKm?: number;
+  isInternational?: boolean;
   airline: string;
+  airlineCode?: string;
+  airlineName?: string;
   aircraft: string;
+  aircraftFamily?: string;
+  manufacturer?: string;
   registration: string;
+  aircraftAge?: number;
   seatNumber: string;
   seatType: string;
   flightClass: string;
   flightReason: string;
-  note: string;
+  rating?: number;
+  note?: string;
+  notes?: string;
+  photos?: string[];
+  isPrivate?: boolean;
+  createdAt?: string;
   depId?: string;
   arrId?: string;
   airlineId?: string;
   aircraftId?: string;
+}
+
+export interface Airport {
+  iata: string;
+  icao?: string;
+  name: string;
+  city: string;
+  countryCode: string;
+  countryName?: string;
+  lat: number;
+  lng: number;
+  timezone?: string;
+}
+
+export interface Sticker {
+  id: string;
+  title: string;
+  category: 'aircraft_models' | 'iconic_airports' | 'special_liveries' | 'airlines';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  imageUrl: string;
+  description?: string;
+}
+
+export interface BlisterType {
+  id: string;
+  name: string;
+  stickersCount: number;
+  coverImageUrl?: string;
+  guaranteedRarity?: 'common' | 'rare' | 'epic' | 'legendary';
+}
+
+export interface BlisterPack {
+  id: string;
+  blisterTypeId: string;
+  obtainedFromFlightId?: string;
+  isOpened: boolean;
+  openedAt?: string | null;
+  receivedStickers?: string[];
+  createdAt: string;
+}
+
+export interface UserSticker {
+  stickerId: string;
+  category: string;
+  quantity: number;
+  isPasted: boolean;
+  firstObtainedAt: string;
+}
+
+export interface UserStats {
+  totalFlights: number;
+  totalDistanceKm: number;
+  totalDurationMinutes: number;
+  uniqueAirportsCount: number;
+  uniqueCountriesCount: number;
+  topRegistration?: { reg: string; count: number };
+  topAircraftFamily?: { family: string; count: number };
+  topManufacturer?: { name: string; count: number };
+  topAirline?: { name: string; count: number };
+  seatPreference?: { window: number; aisle: number; middle: number };
+  longestDomesticFlightKm?: number;
+  longestIntlFlightKm?: number;
+  monthlyActivity?: Record<string, number>;
+  updatedAt?: string;
 }
 
 export interface UserProfile {
@@ -34,6 +113,7 @@ export interface UserProfile {
 
 export interface RegisteredUser {
   id: string;
+  uid?: string;
   name: string;
   email: string;
   avatar?: string;
@@ -44,6 +124,8 @@ export interface RegisteredUser {
   role: 'admin' | 'user';
   status: 'active' | 'pending' | 'suspended';
   country?: string;
+  isPublic?: boolean;
+  shareStats?: boolean;
 }
 
 export interface MonthYearData {
@@ -96,3 +178,4 @@ export interface ColumnMapping {
   seatNumber: string;
   note: string;
 }
+

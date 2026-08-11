@@ -14,6 +14,7 @@ import { AddFlightModal } from './components/AddFlightModal';
 import { ImportCsvModal } from './components/ImportCsvModal';
 import { AirportDetailsModal } from './components/AirportDetailsModal';
 import { AdminModal } from './components/AdminModal';
+import { VirtualAlbumModal } from './components/VirtualAlbumModal';
 import { DottedWorldMapBackground } from './components/DottedWorldMapBackground';
 import { LiveDeparturesBoard } from './components/LiveDeparturesBoard';
 import { INITIAL_FLIGHTS } from './data/initialFlights';
@@ -32,6 +33,7 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
+  const [isAlbumModalOpen, setIsAlbumModalOpen] = useState<boolean>(false);
   const [selectedAirportModal, setSelectedAirportModal] = useState<string | null>(null);
 
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(() => {
@@ -169,22 +171,19 @@ export default function App() {
 
           {/* App Navigation Header */}
           <Header
-            totalFlights={flights.length}
+            onSelectDashboard={() => setView('dashboard')}
+            onOpenAlbumModal={() => setIsAlbumModalOpen(true)}
             onOpenAddModal={() => setIsAddModalOpen(true)}
             onOpenImportModal={() => setIsImportModalOpen(true)}
             isDarkMode={isDarkMode}
             onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
-            onShowLanding={() => {
-              setSharedUsername(null);
-              window.location.hash = '';
-              setView('landing');
-            }}
             onOpenAuthModal={() => setIsAuthModalOpen(true)}
             onOpenProfileModal={() => setIsProfileModalOpen(true)}
             onOpenAdminModal={() => setIsAdminModalOpen(true)}
             currentUser={currentUser}
             userProfile={userProfile}
             onLogout={() => setCurrentUser(null)}
+            activeTab={isAlbumModalOpen ? 'album' : 'dashboard'}
           />
 
           {/* Live Departures Ticker Bar */}
@@ -305,6 +304,13 @@ export default function App() {
           setCurrentUser(user);
           setUserProfile((prev) => ({ ...prev, name: user.name, email: user.email }));
         }}
+        flightsCount={flights.length}
+      />
+
+      <VirtualAlbumModal
+        isOpen={isAlbumModalOpen}
+        onClose={() => setIsAlbumModalOpen(false)}
+        isDarkMode={isDarkMode}
         flightsCount={flights.length}
       />
     </div>
