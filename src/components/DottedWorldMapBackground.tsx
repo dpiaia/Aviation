@@ -56,6 +56,117 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
             <feGaussianBlur stdDeviation="3" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
+
+          {/* ================= REAL AIRPLANE SVG SILHOUETTE DEFINITIONS ================= */}
+          
+          {/* 1. AIRPLANE: Standard Commercial Passenger Jet (e.g. A320/B737) */}
+          <g id="svg-airplane">
+            <path
+              d="M 14 0 
+                 C 12 -1.2 8 -2 2 -2.2
+                 L -2 -11 C -3 -12.5 -4.5 -12.5 -5 -11
+                 L -3.5 -2.2
+                 L -8 -2.5
+                 L -11 -7 C -11.5 -8 -12.5 -8 -13 -7
+                 L -12.2 -1.5 L -14 -1 L -14 1 L -12.2 1.5
+                 L -13 7 C -12.5 8 -11.5 8 -11 7
+                 L -8 2.5
+                 L -3.5 2.2
+                 L -5 11 C -4.5 12.5 -3 12.5 -2 11
+                 L 2 2.2
+                 C 8 2 12 1.2 14 0 Z"
+            />
+            {/* Wing Engine Pods */}
+            <rect x="-0.5" y="-5.5" width="4" height="1.8" rx="0.9" />
+            <rect x="-0.5" y="3.7" width="4" height="1.8" rx="0.9" />
+          </g>
+
+          {/* 2. JUMBO PLANE: Widebody 4-Engine Jet (e.g. B747 / A380) */}
+          <g id="svg-jumbo-plane">
+            <path
+              d="M 16 0 
+                 C 14 -2 9 -3 3 -3.5
+                 L -1 -15 C -2 -16.5 -4 -16.5 -4.8 -15
+                 L -2.5 -3.5
+                 L -9 -3.8
+                 L -12 -9 C -12.8 -10 -14 -10 -14.5 -9
+                 L -13.5 -2 L -16 -1.2 L -16 1.2 L -13.5 2
+                 L -14.5 9 C -14 10 -12.8 10 -12 9
+                 L -9 3.8
+                 L -2.5 3.5
+                 L -4.8 15 C -4 16.5 -2 16.5 -1 15
+                 L 3 3.5
+                 C 9 3 14 2 16 0 Z"
+            />
+            {/* 4 Engine Nacelles */}
+            <rect x="0" y="-8" width="4.5" height="1.8" rx="0.9" />
+            <rect x="-2" y="-12" width="4.5" height="1.8" rx="0.9" />
+            <rect x="0" y="6.2" width="4.5" height="1.8" rx="0.9" />
+            <rect x="-2" y="10.2" width="4.5" height="1.8" rx="0.9" />
+          </g>
+
+          {/* 3. BOMBER: Strategic / Delta-Wing / Concorde Jet */}
+          <g id="svg-bomber">
+            <path
+              d="M 15 0 
+                 L 7 -2.5
+                 L -5 -16 C -6.5 -17.5 -8 -16.5 -7.5 -15
+                 L -2.5 -6
+                 L -6.5 -6
+                 L -8 -8.5 L -9.5 -8.5 L -8.5 -4
+                 L -11 -4 L -10 0 L -11 4
+                 L -8.5 4 L -9.5 8.5 L -8 8.5
+                 L -6.5 6
+                 L -2.5 6
+                 L -7.5 15 C -8 16.5 -6.5 17.5 -5 16
+                 L 7 2.5 Z"
+            />
+          </g>
+
+          {/* 4. JET PLANE: Sleek Executive / Fighter Jet */}
+          <g id="svg-jet-plane">
+            <path
+              d="M 16 0
+                 L 5 -1.5
+                 L -2 -10 C -3 -11 -4.5 -10.5 -4 -9
+                 L -1.5 -1.5
+                 L -8 -1.8
+                 L -12 -5.5 C -13 -6.5 -14 -5.5 -13.5 -4.5
+                 L -12 -0.8 L -14 -0.6 L -14 0.6 L -12 0.8
+                 L -13.5 4.5 C -14 5.5 -13 6.5 -12 5.5
+                 L -8 1.8
+                 L -1.5 1.5
+                 L -4 9 C -4.5 10.5 -3 11 -2 10
+                 L 5 1.5 Z"
+            />
+            <line x1="-3" y1="-10" x2="2" y2="-10" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+            <line x1="-3" y1="10" x2="2" y2="10" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+          </g>
+
+          {/* 5. PROPELLER PLANE: Turboprop / Twin Propeller Aircraft */}
+          <g id="svg-propeller-plane">
+            <path
+              d="M 11 0
+                 C 10 -1.5 6 -2 1 -2
+                 L 0 -12 C -0.5 -13 -2 -13 -2.5 -12
+                 L -3 -2
+                 L -7.5 -2
+                 L -9.5 -6 C -10 -7 -11 -7 -11.5 -6
+                 L -10.5 -0.8 L -12 -0.6 L -12 0.6 L -10.5 0.8
+                 L -11.5 6 C -11 7 -10 7 -9.5 6
+                 L -7.5 2
+                 L -3 2
+                 L -2.5 12 C -2 13 -0.5 13 0 12
+                 L 1 2
+                 C 6 2 10 1.5 11 0 Z"
+            />
+            {/* Engine Nacelles */}
+            <rect x="0.5" y="-7.5" width="3" height="2.5" rx="1" />
+            <rect x="0.5" y="5" width="3" height="2.5" rx="1" />
+            {/* Spinning Propeller Discs */}
+            <line x1="3.5" y1="-9.5" x2="3.5" y2="-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
+            <line x1="3.5" y1="3" x2="3.5" y2="9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
+          </g>
         </defs>
 
         {/* Global Grid Overlay */}
@@ -191,7 +302,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
             />
           </path>
 
-          {/* Flying Jet Airplane 1 */}
+          {/* Flying Commercial Airplane 1 */}
           <g>
             <animateMotion
               path="M 330 340 Q 250 250 240 200"
@@ -199,11 +310,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
               repeatCount="indefinite"
               rotate="auto"
             />
-            <path
-              d="M 0 -4 L 8 0 L 0 4 L 2 1 L -6 2 L -4 0 L -6 -2 L 2 -1 Z"
-              fill="#ffffff"
-              filter="url(#glow)"
-            />
+            <use href="#svg-airplane" fill="#ffffff" filter="url(#glow)" />
           </g>
         </g>
 
@@ -238,7 +345,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
             />
           </path>
 
-          {/* Flying Jet Airplane 2 */}
+          {/* Flying Jumbo Plane 2 (Boeing 747 / A380 Widebody) */}
           <g>
             <animateMotion
               path="M 330 340 Q 420 220 500 130"
@@ -246,11 +353,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
               repeatCount="indefinite"
               rotate="auto"
             />
-            <path
-              d="M 0 -4 L 8 0 L 0 4 L 2 1 L -6 2 L -4 0 L -6 -2 L 2 -1 Z"
-              fill="#fbbf24"
-              filter="url(#glow)"
-            />
+            <use href="#svg-jumbo-plane" fill="#fbbf24" filter="url(#glow)" />
           </g>
         </g>
 
@@ -283,7 +386,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
             />
           </path>
 
-          {/* Flying Jet Airplane 3 */}
+          {/* Flying Sleek Jet Plane 3 */}
           <g>
             <animateMotion
               path="M 260 150 Q 380 80 500 130"
@@ -291,11 +394,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
               repeatCount="indefinite"
               rotate="auto"
             />
-            <path
-              d="M 0 -4 L 8 0 L 0 4 L 2 1 L -6 2 L -4 0 L -6 -2 L 2 -1 Z"
-              fill="#e0e7ff"
-              filter="url(#glow)"
-            />
+            <use href="#svg-jet-plane" fill="#38bdf8" filter="url(#glow)" />
           </g>
         </g>
 
@@ -304,7 +403,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
           <path
             d="M 330 340 Q 355 310 370 280"
             fill="none"
-            stroke="#38bdf8"
+            stroke="#34d399"
             strokeWidth="1"
             strokeDasharray="3 4"
             opacity="0.3"
@@ -323,24 +422,61 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
               attributeName="stroke-dashoffset"
               from="200"
               to="0"
-              dur="4.5s"
+              dur="5s"
               repeatCount="indefinite"
             />
           </path>
 
-          {/* Flying Jet Airplane 4 */}
+          {/* Flying Propeller Plane 4 (Turboprop ATR) */}
           <g>
             <animateMotion
               path="M 330 340 Q 355 310 370 280"
-              dur="4.5s"
+              dur="5s"
               repeatCount="indefinite"
               rotate="auto"
             />
-            <path
-              d="M 0 -3 L 6 0 L 0 3 L 1 1 L -4 1.5 L -3 0 L -4 -1.5 L 1 -1 Z"
-              fill="#38bdf8"
-              filter="url(#glow)"
+            <use href="#svg-propeller-plane" fill="#34d399" filter="url(#glow)" />
+          </g>
+        </g>
+
+        {/* --- ROUTE 5: MIDDLE EAST TO ASIA (DXB -> HND / SIN) --- */}
+        <g>
+          <path
+            d="M 620 210 Q 720 150 820 180"
+            fill="none"
+            stroke="#ec6726"
+            strokeWidth="1"
+            strokeDasharray="3 5"
+            opacity="0.3"
+          />
+
+          <path
+            d="M 620 210 Q 720 150 820 180"
+            fill="none"
+            stroke="url(#contrail-amber)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeDasharray="80 260"
+            filter="url(#glow)"
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              from="350"
+              to="0"
+              dur="8s"
+              repeatCount="indefinite"
             />
+          </path>
+
+          {/* Flying Bomber / Stealth Jet 5 */}
+          <g>
+            <animateMotion
+              path="M 620 210 Q 720 150 820 180"
+              dur="8s"
+              repeatCount="indefinite"
+              rotate="auto"
+            />
+            <use href="#svg-bomber" fill="#ec6726" filter="url(#glow)" />
           </g>
         </g>
       </svg>
