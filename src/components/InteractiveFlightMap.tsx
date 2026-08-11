@@ -22,30 +22,73 @@ interface RouteStat {
   recentDate: string;
 }
 
+// Country Flags & Centroid Coordinates Map for Country Overlay Markers
+const COUNTRY_METADATA: Record<string, { flag: string; lat: number; lng: number }> = {
+  'Brasil': { flag: '🇧🇷', lat: -14.235, lng: -51.925 },
+  'EUA': { flag: '🇺🇸', lat: 37.0902, lng: -95.7129 },
+  'Portugal': { flag: '🇵🇹', lat: 39.3999, lng: -8.2245 },
+  'França': { flag: '🇫🇷', lat: 46.2276, lng: 2.2137 },
+  'Espanha': { flag: '🇪🇸', lat: 40.4637, lng: -3.7492 },
+  'Alemanha': { flag: '🇩🇪', lat: 51.1657, lng: 10.4515 },
+  'Reino Unido': { flag: '🇬🇧', lat: 55.3781, lng: -3.436 },
+  'Argentina': { flag: '🇦🇷', lat: -38.4161, lng: -63.6167 },
+  'Chile': { flag: '🇨🇱', lat: -35.6751, lng: -71.543 },
+  'Colômbia': { flag: '🇨🇴', lat: 4.5709, lng: -74.2973 },
+  'México': { flag: '🇲🇽', lat: 23.6345, lng: -102.5528 },
+  'Panamá': { flag: '🇵🇦', lat: 8.538, lng: -80.7821 },
+  'Peru': { flag: '🇵🇪', lat: -9.19, lng: -75.0152 },
+  'Uruguai': { flag: '🇺🇾', lat: -32.5228, lng: -55.7658 },
+};
+
+// Built-in lightweight fallback GeoJSON polygons so map is NEVER empty
+const FALLBACK_GEOJSON = {
+  type: 'FeatureCollection',
+  features: [
+    { type: 'Feature', id: 'BRA', properties: { name: 'Brazil', NAME: 'Brazil' }, geometry: { type: 'Polygon', coordinates: [[[-73.98, -9.28], [-60, 5], [-34.8, -7], [-53, -33.7], [-73.98, -9.28]]] } },
+    { type: 'Feature', id: 'USA', properties: { name: 'United States', NAME: 'United States' }, geometry: { type: 'Polygon', coordinates: [[[-124, 49], [-67, 49], [-80, 25], [-117, 32], [-124, 49]]] } },
+    { type: 'Feature', id: 'PRT', properties: { name: 'Portugal', NAME: 'Portugal' }, geometry: { type: 'Polygon', coordinates: [[[-9.5, 37], [-6.2, 37], [-6.2, 42.1], [-9.5, 42.1], [-9.5, 37]]] } },
+    { type: 'Feature', id: 'FRA', properties: { name: 'France', NAME: 'France' }, geometry: { type: 'Polygon', coordinates: [[[-4.8, 43.5], [8.2, 43.5], [8.2, 51.1], [-4.8, 51.1], [-4.8, 43.5]]] } },
+    { type: 'Feature', id: 'ESP', properties: { name: 'Spain', NAME: 'Spain' }, geometry: { type: 'Polygon', coordinates: [[[-9.3, 36], [3.3, 36], [3.3, 43.8], [-9.3, 43.8], [-9.3, 36]]] } },
+    { type: 'Feature', id: 'DEU', properties: { name: 'Germany', NAME: 'Germany' }, geometry: { type: 'Polygon', coordinates: [[[5.8, 47.3], [15, 47.3], [15, 55], [5.8, 55], [[5.8, 47.3]]]] } },
+    { type: 'Feature', id: 'GBR', properties: { name: 'United Kingdom', NAME: 'United Kingdom' }, geometry: { type: 'Polygon', coordinates: [[[-8, 50], [1.7, 50], [1.7, 58.6], [-8, 58.6], [-8, 50]]] } },
+    { type: 'Feature', id: 'ARG', properties: { name: 'Argentina', NAME: 'Argentina' }, geometry: { type: 'Polygon', coordinates: [[[-73.5, -21.8], [-53.6, -26.2], [-65, -55], [-73.5, -21.8]]] } },
+    { type: 'Feature', id: 'CHL', properties: { name: 'Chile', NAME: 'Chile' }, geometry: { type: 'Polygon', coordinates: [[[-75.6, -17.5], [-68.5, -17.5], [-68.5, -55], [-75.6, -55], [-75.6, -17.5]]] } },
+    { type: 'Feature', id: 'COL', properties: { name: 'Colombia', NAME: 'Colombia' }, geometry: { type: 'Polygon', coordinates: [[[-79, -4.2], [-66.8, -4.2], [-66.8, 12.5], [-79, 12.5], [-79, -4.2]]] } },
+    { type: 'Feature', id: 'MEX', properties: { name: 'Mexico', NAME: 'Mexico' }, geometry: { type: 'Polygon', coordinates: [[[-117, 32.5], [-86.7, 21], [-92, 14.5], [-117, 32.5]]] } },
+    { type: 'Feature', id: 'PAN', properties: { name: 'Panama', NAME: 'Panama' }, geometry: { type: 'Polygon', coordinates: [[[-83, 7.2], [-77.2, 7.2], [-77.2, 9.6], [-83, 9.6], [-83, 7.2]]] } },
+    { type: 'Feature', id: 'PER', properties: { name: 'Peru', NAME: 'Peru' }, geometry: { type: 'Polygon', coordinates: [[[-81.3, -0.03], [-68.6, -0.03], [-68.6, -18.3], [-81.3, -18.3], [-81.3, -0.03]]] } },
+    { type: 'Feature', id: 'URY', properties: { name: 'Uruguay', NAME: 'Uruguay' }, geometry: { type: 'Polygon', coordinates: [[[-58.4, -30.1], [-53.1, -30.1], [-53.1, -35], [-58.4, -35], [-58.4, -30.1]]] } },
+  ]
+};
+
 function matchCountryCount(featureName: string, featureIso: string, countryCounts: Record<string, number>): number {
-  const nameLower = (featureName || '').toLowerCase();
-  const isoUpper = (featureIso || '').toUpperCase();
+  const nameLower = (featureName || '').toLowerCase().trim();
+  const isoUpper = (featureIso || '').toUpperCase().trim();
 
   let count = 0;
   Object.entries(countryCounts).forEach(([cName, cCount]) => {
-    const cLower = cName.toLowerCase();
-    if (
-      (cLower === 'brasil' && (nameLower.includes('brazil') || isoUpper === 'BRA')) ||
+    const cLower = cName.toLowerCase().trim();
+
+    const isMatch =
+      (cLower === 'brasil' && (nameLower.includes('brazil') || nameLower.includes('brasil') || isoUpper === 'BRA')) ||
       (cLower === 'eua' && (nameLower.includes('united states') || nameLower.includes('america') || isoUpper === 'USA')) ||
       (cLower === 'portugal' && (nameLower.includes('portugal') || isoUpper === 'PRT')) ||
-      (cLower === 'frança' && (nameLower.includes('france') || isoUpper === 'FRA')) ||
-      (cLower === 'espanha' && (nameLower.includes('spain') || isoUpper === 'ESP')) ||
-      (cLower === 'alemanha' && (nameLower.includes('germany') || isoUpper === 'DEU')) ||
-      (cLower === 'reino unido' && (nameLower.includes('united kingdom') || nameLower.includes('britain') || isoUpper === 'GBR')) ||
+      (cLower === 'frança' && (nameLower.includes('france') || nameLower.includes('frança') || isoUpper === 'FRA')) ||
+      (cLower === 'espanha' && (nameLower.includes('spain') || nameLower.includes('espanha') || isoUpper === 'ESP')) ||
+      (cLower === 'alemanha' && (nameLower.includes('germany') || nameLower.includes('alemanha') || isoUpper === 'DEU')) ||
+      (cLower === 'reino unido' && (nameLower.includes('united kingdom') || nameLower.includes('britain') || nameLower.includes('uk') || isoUpper === 'GBR')) ||
       (cLower === 'argentina' && (nameLower.includes('argentina') || isoUpper === 'ARG')) ||
       (cLower === 'chile' && (nameLower.includes('chile') || isoUpper === 'CHL')) ||
-      (cLower === 'colômbia' && (nameLower.includes('colombia') || isoUpper === 'COL')) ||
-      (cLower === 'méxico' && (nameLower.includes('mexico') || isoUpper === 'MEX')) ||
-      (cLower === 'panamá' && (nameLower.includes('panama') || isoUpper === 'PAN')) ||
+      (cLower === 'colômbia' && (nameLower.includes('colombia') || nameLower.includes('colômbia') || isoUpper === 'COL')) ||
+      (cLower === 'méxico' && (nameLower.includes('mexico') || nameLower.includes('méxico') || isoUpper === 'MEX')) ||
+      (cLower === 'panamá' && (nameLower.includes('panama') || nameLower.includes('panamá') || isoUpper === 'PAN')) ||
       (cLower === 'peru' && (nameLower.includes('peru') || isoUpper === 'PER')) ||
-      (cLower === 'uruguai' && (nameLower.includes('uruguay') || isoUpper === 'URY')) ||
-      (nameLower === cLower)
-    ) {
+      (cLower === 'uruguai' && (nameLower.includes('uruguay') || nameLower.includes('uruguai') || isoUpper === 'URY')) ||
+      nameLower === cLower ||
+      nameLower.includes(cLower) ||
+      cLower.includes(nameLower);
+
+    if (isMatch) {
       count += cCount;
     }
   });
@@ -65,21 +108,21 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
   const [selectedAirportIata, setSelectedAirportIata] = useState<string>('ALL');
   const [activeRoute, setActiveRoute] = useState<RouteStat | null>(null);
   const [mapMode, setMapMode] = useState<'routes' | 'nodes' | 'countries'>('routes');
-  const [geoJsonData, setGeoJsonData] = useState<any>(null);
+  const [geoJsonData, setGeoJsonData] = useState<any>(FALLBACK_GEOJSON);
 
-  // Load GeoJSON for world countries choropleth
+  // Load GeoJSON for world countries choropleth with multi-source fallback
   useEffect(() => {
     let isMounted = true;
     fetch('https://cdn.jsdelivr.net/gh/johan/world-geojson@master/countries.geo.json')
       .then((res) => res.json())
       .then((data) => {
-        if (isMounted) setGeoJsonData(data);
+        if (isMounted && data && data.features) setGeoJsonData(data);
       })
       .catch(() => {
-        fetch('https://raw.githubusercontent.com/johan/world-geojson/master/countries.geo.json')
+        fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
           .then((res) => res.json())
           .then((data) => {
-            if (isMounted) setGeoJsonData(data);
+            if (isMounted && data && data.features) setGeoJsonData(data);
           })
           .catch((e) => console.warn('GeoJSON load fallback error:', e));
       });
@@ -256,6 +299,11 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
 
     const bounds = L.latLngBounds([]);
 
+    // Always calculate bounds from airports
+    airportsMap.forEach((ap) => {
+      bounds.extend([ap.info.lat, ap.info.lng]);
+    });
+
     // 0. Render GeoJSON Countries Choropleth Layer
     if (geoJsonData) {
       const geoJsonLayer = L.geoJSON(geoJsonData, {
@@ -307,7 +355,63 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
       geoJsonLayer.addTo(layerGroup);
     }
 
-    // 1. Draw Airport Markers
+    // 1. Draw Country Markers when in 'countries' mode
+    if (mapMode === 'countries') {
+      Object.entries(countryStats).forEach(([cName, cCount]) => {
+        const meta = COUNTRY_METADATA[cName] || { flag: '🌐', lat: 0, lng: 0 };
+
+        // Fallback lat/lng from airports in that country if meta is empty
+        let lat = meta.lat;
+        let lng = meta.lng;
+        if (!lat && !lng) {
+          const matchingAirports = Array.from(airportsMap.values()).filter(
+            (ap) => extractCountry(ap.info.city, ap.info.iata) === cName
+          );
+          if (matchingAirports.length > 0) {
+            lat = matchingAirports.reduce((acc, a) => acc + a.info.lat, 0) / matchingAirports.length;
+            lng = matchingAirports.reduce((acc, a) => acc + a.info.lng, 0) / matchingAirports.length;
+          }
+        }
+
+        if (lat && lng) {
+          bounds.extend([lat, lng]);
+
+          const countryMarkerHtml = `
+            <div class="relative flex items-center justify-center cursor-pointer group">
+              <div class="absolute -inset-2 rounded-2xl bg-[#EC6726]/30 blur-md animate-pulse"></div>
+              <div class="relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/90 border-2 border-[#EC6726] text-white shadow-2xl font-mono text-xs font-bold whitespace-nowrap">
+                <span class="text-sm">${meta.flag}</span>
+                <span class="text-amber-200">${cName}</span>
+                <span class="px-1.5 py-0.5 rounded-md bg-[#EC6726] text-slate-950 font-black text-[10px]">
+                  ${cCount} voos
+                </span>
+              </div>
+            </div>
+          `;
+
+          const customIcon = L.divIcon({
+            html: countryMarkerHtml,
+            className: 'custom-country-badge-icon',
+            iconSize: [120, 36],
+            iconAnchor: [60, 18],
+          });
+
+          const marker = L.marker([lat, lng], { icon: customIcon });
+          marker.bindPopup(`
+            <div style="font-family: sans-serif; padding: 6px; color: #f8fafc;">
+              <div style="font-weight: 800; font-size: 14px; color: #fdba74;">${meta.flag} ${cName}</div>
+              <div style="font-size: 12px; color: #cbd5e1; margin-top: 4px;">
+                Total de Trajetos Registrados: <strong style="color: #ea580c;">${cCount} voos</strong>
+              </div>
+            </div>
+          `, { className: 'custom-leaflet-popup' });
+
+          marker.addTo(layerGroup);
+        }
+      });
+    }
+
+    // 2. Draw Airport Markers
     if (mapMode === 'routes' || mapMode === 'nodes') {
       airportsMap.forEach((ap, iata) => {
         const loc = ap.info;
@@ -699,18 +803,40 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
                 {(Object.entries(countryStats) as [string, number][])
                   .sort((a, b) => b[1] - a[1])
                   .map(([country, count]: [string, number], idx) => {
-                    let colorBg = 'bg-orange-500/20 text-orange-300 border-orange-500/40';
-                    if (count > 20) colorBg = 'bg-red-900/40 text-red-200 border-red-500/60 font-black';
-                    else if (count > 10) colorBg = 'bg-orange-600/30 text-orange-200 border-orange-500/50 font-bold';
-                    else if (count > 5) colorBg = 'bg-amber-600/20 text-amber-300 border-amber-500/40';
+                    const meta = COUNTRY_METADATA[country] || { flag: '🌐', lat: 0, lng: 0 };
+                    let colorBg = 'bg-orange-500/20 text-orange-300 border-orange-500/40 hover:bg-orange-500/40';
+                    if (count > 20) colorBg = 'bg-red-900/40 text-red-200 border-red-500/60 font-black hover:bg-red-800/60';
+                    else if (count > 10) colorBg = 'bg-orange-600/30 text-orange-200 border-orange-500/50 font-bold hover:bg-orange-600/50';
+                    else if (count > 5) colorBg = 'bg-amber-600/20 text-amber-300 border-amber-500/40 hover:bg-amber-600/40';
+
+                    const handleCountryClick = () => {
+                      const map = mapInstanceRef.current;
+                      if (!map) return;
+                      let lat = meta.lat;
+                      let lng = meta.lng;
+                      if (!lat && !lng) {
+                        const matchingAirports = Array.from(airportsMap.values()).filter(
+                          (ap) => extractCountry(ap.info.city, ap.info.iata) === country
+                        );
+                        if (matchingAirports.length > 0) {
+                          lat = matchingAirports.reduce((acc, a) => acc + a.info.lat, 0) / matchingAirports.length;
+                          lng = matchingAirports.reduce((acc, a) => acc + a.info.lng, 0) / matchingAirports.length;
+                        }
+                      }
+                      if (lat && lng) {
+                        map.flyTo([lat, lng], 5, { duration: 1.2 });
+                      }
+                    };
 
                     return (
-                      <span
+                      <button
                         key={country}
-                        className={`px-2.5 py-1 rounded-xl text-[11px] font-mono border ${colorBg}`}
+                        onClick={handleCountryClick}
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-mono border transition-all cursor-pointer flex items-center gap-1 ${colorBg}`}
                       >
-                        #{idx + 1} {country}: <strong>{count} voos</strong>
-                      </span>
+                        <span>{meta.flag}</span>
+                        <span>#{idx + 1} {country}: <strong>{count} voos</strong></span>
+                      </button>
                     );
                   })}
               </div>

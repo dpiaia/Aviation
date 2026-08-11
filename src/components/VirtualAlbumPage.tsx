@@ -56,7 +56,7 @@ const INITIAL_CARDS: ExtendedCard[] = [
     prestigeLevel: 'gold',
     title: 'Embraer E195-E2',
     subtitle: 'Modelo Comercial Genérico',
-    imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=600',
+    imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800',
     description: 'Aeronave comercial de passageiros de alcance médio e alta eficiência energética com motores GTF.',
     quantity: 5,
     isUnlocked: true,
@@ -77,7 +77,7 @@ const INITIAL_CARDS: ExtendedCard[] = [
     prestigeLevel: 'base',
     title: 'Boeing 787-9 Dreamliner',
     subtitle: 'Widebody de Longo Alcance',
-    imageUrl: 'https://images.unsplash.com/photo-1519074069444-1ba4edd16be1?auto=format&fit=crop&q=80&w=600',
+    imageUrl: 'https://images.unsplash.com/photo-1519074069444-1ba4edd16be1?auto=format&fit=crop&q=80&w=800',
     description: 'Fuselagem em compostos de fibra de carbono e janelas eletrocrômicas autorreguláveis.',
     quantity: 2,
     isUnlocked: true,
@@ -100,7 +100,7 @@ const INITIAL_CARDS: ExtendedCard[] = [
     prestigeLevel: 'base',
     title: 'Embraer E2 PS-AED',
     subtitle: 'Matrícula Específica das Ilhas',
-    imageUrl: 'https://images.unsplash.com/photo-1556388158-158ea5ccacbd?auto=format&fit=crop&q=80&w=600',
+    imageUrl: 'https://images.unsplash.com/photo-1556388158-158ea5ccacbd?auto=format&fit=crop&q=80&w=800',
     description: 'Unidade física entregue com a clássica pintura temática Arara Azul.',
     quantity: 1,
     isUnlocked: true,
@@ -121,7 +121,7 @@ const INITIAL_CARDS: ExtendedCard[] = [
     prestigeLevel: 'base',
     title: 'Boeing 737-800 PR-GXA',
     subtitle: 'Unidade Frota Gol',
-    imageUrl: 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&q=80&w=600',
+    imageUrl: 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&q=80&w=800',
     description: 'Aeronave veterana de rotas domésticas brasileiras com winglets Split Scimitar.',
     quantity: 1,
     isUnlocked: true,
@@ -144,7 +144,7 @@ const INITIAL_CARDS: ExtendedCard[] = [
     prestigeLevel: 'base',
     title: 'Viracopos Campinas (VCP)',
     subtitle: 'Aeroporto de Origem / Destino',
-    imageUrl: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=600',
+    imageUrl: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=800',
     description: 'Principal hub logístico e de conexões aéreas do interior de São Paulo.',
     quantity: 3,
     isUnlocked: true,
@@ -165,7 +165,7 @@ const INITIAL_CARDS: ExtendedCard[] = [
     prestigeLevel: 'base',
     title: 'Santos Dumont (SDU)',
     subtitle: 'Aeroporto Central Rio',
-    imageUrl: 'https://images.unsplash.com/photo-1529074963764-98f45c47344b?auto=format&fit=crop&q=80&w=600',
+    imageUrl: 'https://images.unsplash.com/photo-1529074963764-98f45c47344b?auto=format&fit=crop&q=80&w=800',
     description: 'Famoso pela aproximação visual espetacular contornando o Pão de Açúcar.',
     quantity: 1,
     isUnlocked: true,
@@ -188,7 +188,7 @@ const INITIAL_CARDS: ExtendedCard[] = [
     prestigeLevel: 'diamond',
     title: 'Concorde Supersônico G-BOAC',
     subtitle: 'Especial Fabricante Histórica',
-    imageUrl: 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?auto=format&fit=crop&q=80&w=600',
+    imageUrl: 'https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?auto=format&fit=crop&q=80&w=800',
     description: 'Aeronave comercial supersônica lendária da Aérospatiale / BAC capaz de cruzar o Atlântico a Mach 2.04.',
     quantity: 11,
     isUnlocked: true,
@@ -209,7 +209,7 @@ const INITIAL_CARDS: ExtendedCard[] = [
     prestigeLevel: 'black_platinum',
     title: 'Boeing 707-320B',
     subtitle: 'Especial Fabricante Histórica',
-    imageUrl: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&q=80&w=600',
+    imageUrl: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&q=80&w=800',
     description: 'O quadrijato pioneiro que revolucionou a Era do Jato na aviação comercial global.',
     quantity: 24,
     isUnlocked: true,
@@ -544,7 +544,17 @@ export const VirtualAlbumPage: React.FC<VirtualAlbumPageProps> = ({
 
                 {/* Image */}
                 <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 mb-3 border border-slate-700/60 shadow-inner">
-                  <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" />
+                  <img
+                    src={card.imageUrl}
+                    alt={card.title}
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800';
+                    }}
+                    className="w-full h-full object-cover"
+                  />
                   {!card.isUnlocked && (
                     <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs flex flex-col items-center justify-center text-slate-400">
                       <Lock className="w-6 h-6 mb-1 text-slate-500" />
@@ -626,7 +636,17 @@ export const VirtualAlbumPage: React.FC<VirtualAlbumPageProps> = ({
                 </div>
 
                 <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950 mb-3 border border-slate-700 shadow-xl">
-                  <img src={inspectedCard.imageUrl} alt={inspectedCard.title} className="w-full h-full object-cover" />
+                  <img
+                    src={inspectedCard.imageUrl}
+                    alt={inspectedCard.title}
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800';
+                    }}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed mb-3">
@@ -803,7 +823,17 @@ export const VirtualAlbumPage: React.FC<VirtualAlbumPageProps> = ({
                             </div>
 
                             <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-950 border border-slate-700/80 mb-3 shadow-lg">
-                              <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" />
+                              <img
+                                src={card.imageUrl}
+                                alt={card.title}
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  const target = e.currentTarget as HTMLImageElement;
+                                  target.onerror = null;
+                                  target.src = 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800';
+                                }}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
 
                             <h4 className="font-black text-sm text-white line-clamp-1">{card.title}</h4>
