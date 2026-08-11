@@ -32,6 +32,20 @@ export interface UserProfile {
   bio?: string;
 }
 
+export interface RegisteredUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  provider: 'google' | 'email' | 'demo';
+  createdAt: string; // ISO or YYYY-MM-DD HH:mm
+  lastActive: string;
+  flightCount: number;
+  role: 'admin' | 'user';
+  status: 'active' | 'pending' | 'suspended';
+  country?: string;
+}
+
 export interface MonthYearData {
   monthIndex: number; // 0..11
   monthName: string;  // Janeiro..Dezembro

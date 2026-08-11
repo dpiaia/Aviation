@@ -12,6 +12,7 @@ interface HeaderProps {
   onShowLanding: () => void;
   onOpenAuthModal: () => void;
   onOpenProfileModal: () => void;
+  onOpenAdminModal: () => void;
   currentUser: { name: string; email: string; avatar?: string } | null;
   userProfile?: UserProfile;
 }
@@ -25,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   onShowLanding,
   onOpenAuthModal,
   onOpenProfileModal,
+  onOpenAdminModal,
   currentUser,
   userProfile,
 }) => {
@@ -76,6 +78,16 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Home className="w-4 h-4 text-[#EC6726]" />
             <span className="hidden sm:inline">Apresentação</span>
+          </button>
+
+          {/* Admin Module Button */}
+          <button
+            onClick={onOpenAdminModal}
+            className="px-3 py-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/30 hover:bg-purple-500/20 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+            title="Painel de Administração (Gestão de Cadastrados)"
+          >
+            <Shield className="w-4 h-4 text-purple-400" />
+            <span className="hidden sm:inline font-mono">Admin</span>
           </button>
 
           {/* Share Profile Button */}

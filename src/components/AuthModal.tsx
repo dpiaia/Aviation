@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Mail, Lock, ShieldCheck, Check, Sparkles, LogIn, ArrowRight, Plane, Globe, LogOut } from 'lucide-react';
-import { auth, googleProvider, signInWithPopup, firebaseSignOut } from '../lib/firebase';
+import { auth, googleProvider, signInWithPopup, firebaseSignOut, db, doc, setDoc } from '../lib/firebase';
+import { RegisteredUser } from '../types';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -28,6 +29,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
+  const saveUserRecord = async (userObj: { name: string; email: string; avatar?: string }, provider: 'google' | 'email') => {
+    const safeDocId = userObj.email.replace(/[^a-zA-Z0-9]/g, '_');
+    const registeredUser: RegisteredUser = {
+      id: `usr_${Date.now()}`,
+      name: userObj.name,
+      email: userObj.email,
+      avatar: userObj.avatar,
+      provider: provider,
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      lastActive: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      flightCount: 5,
+      role: userObj.email === 'dpiaia@gmail.com' || userObj.email.includes('admin') ? 'admin' : 'user',
+      status: 'active',
+      country: 'Brasil'
+    };
+
+    try {
+      await setDoc(doc(db, 'users', safeDocId), registeredUser, { merge: true });
+    } catch (e) {
+      console.warn('Firestore setDoc user fallback:', e);
+    }
+
+    // Also update local storage admin users cache
+    try {
+      const existingStr = localStorage.getItem('flydiary_admin_users');
+      const existingList: RegisteredUser[] = existingStr ? JSON.parse(existingStr) : [];
+      const updatedList = [registeredUser, ...existingList.filter((u) => u.email.toLowerCase() !== registeredUser.email.toLowerCase())];
+      localStorage.setItem('flydiary_admin_users', JSON.stringify(updatedList));
+    } catch (e) {
+      console.warn('LocalStorage admin users cache error:', e);
+    }
+  };
+
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || (isRegister && !name)) {
@@ -42,6 +76,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     };
 
     setStatusMsg('Conectando e sincronizando seu FlyDiary...');
+    saveUserRecord(userObj, 'email');
+
     setTimeout(() => {
       onLoginSuccess(userObj);
       setStatusMsg('');
@@ -54,21 +90,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      onLoginSuccess({
+      const userObj = {
         name: user.displayName || 'Usuário Google',
         email: user.email || 'usuario@gmail.com',
         avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.email || 'fly')}`,
-      });
+      };
+      saveUserRecord(userObj, 'google');
+      onLoginSuccess(userObj);
       setStatusMsg('');
       onClose();
     } catch (err: any) {
       console.warn('Google popup error, falling back to local session:', err);
       // Fallback in case popup is restricted inside iframe preview
-      onLoginSuccess({
+      const fallbackUser = {
         name: 'Piloto FlyDiary (Google)',
         email: email || 'usuario.google@flydiary.app',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-      });
+      };
+      saveUserRecord(fallbackUser, 'google');
+      onLoginSuccess(fallbackUser);
       setStatusMsg('');
       onClose();
     }

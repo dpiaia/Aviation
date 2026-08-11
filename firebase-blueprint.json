@@ -23,6 +23,34 @@
         "note": { "type": "string" }
       },
       "required": ["id", "date", "from", "to"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Registered FlyDiary user profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "avatar": { "type": "string" },
+        "provider": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "lastActive": { "type": "string" },
+        "flightCount": { "type": "number" },
+        "role": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "name", "email"]
+    }
+  },
+  "firestore": {
+    "/users": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Collection of registered users"
+    },
+    "/users/{userId}/flights": {
+      "schema": { "$ref": "#/entities/Flight" },
+      "description": "Subcollection of flights logged by a specific user"
     }
   }
 }

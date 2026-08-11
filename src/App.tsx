@@ -13,6 +13,7 @@ import { FlightLogTable } from './components/FlightLogTable';
 import { AddFlightModal } from './components/AddFlightModal';
 import { ImportCsvModal } from './components/ImportCsvModal';
 import { AirportDetailsModal } from './components/AirportDetailsModal';
+import { AdminModal } from './components/AdminModal';
 import { DottedWorldMapBackground } from './components/DottedWorldMapBackground';
 import { INITIAL_FLIGHTS } from './data/initialFlights';
 import { Flight, UserProfile } from './types';
@@ -29,6 +30,7 @@ export default function App() {
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
   const [selectedAirportModal, setSelectedAirportModal] = useState<string | null>(null);
 
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(() => {
@@ -154,6 +156,7 @@ export default function App() {
           onOpenLogin={() => setIsAuthModalOpen(true)}
           onOpenImport={() => setIsImportModalOpen(true)}
           onOpenAddFlight={() => setIsAddModalOpen(true)}
+          onOpenAdmin={() => setIsAdminModalOpen(true)}
           isDarkMode={isDarkMode}
           onToggleTheme={() => setIsDarkMode(!isDarkMode)}
           currentUser={currentUser}
@@ -177,6 +180,7 @@ export default function App() {
             }}
             onOpenAuthModal={() => setIsAuthModalOpen(true)}
             onOpenProfileModal={() => setIsProfileModalOpen(true)}
+            onOpenAdminModal={() => setIsAdminModalOpen(true)}
             currentUser={currentUser}
             userProfile={userProfile}
           />
@@ -285,6 +289,13 @@ export default function App() {
       <AirportDetailsModal
         airportQuery={selectedAirportModal}
         onClose={() => setSelectedAirportModal(null)}
+      />
+
+      <AdminModal
+        isOpen={isAdminModalOpen}
+        onClose={() => setIsAdminModalOpen(false)}
+        isDarkMode={isDarkMode}
+        currentUser={currentUser}
       />
     </div>
   );

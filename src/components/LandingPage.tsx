@@ -23,7 +23,8 @@ import {
   Sparkles,
   Barcode,
   Navigation,
-  Compass
+  Compass,
+  Shield
 } from 'lucide-react';
 import { DottedWorldMapBackground } from './DottedWorldMapBackground';
 
@@ -32,6 +33,7 @@ interface LandingPageProps {
   onOpenLogin: () => void;
   onOpenImport: () => void;
   onOpenAddFlight: () => void;
+  onOpenAdmin?: () => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
   currentUser: { name: string; email: string; avatar?: string } | null;
@@ -122,6 +124,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenLogin,
   onOpenImport,
   onOpenAddFlight,
+  onOpenAdmin,
   isDarkMode,
   onToggleTheme,
   currentUser,
@@ -206,6 +209,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
               <span>RADAR ATIVO: 2.450 AIRPORTS</span>
             </div>
+
+            {onOpenAdmin && (
+              <button
+                onClick={onOpenAdmin}
+                className="px-3.5 py-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/30 hover:bg-purple-500/20 text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer"
+                title="Painel Admin de Cadastrados"
+              >
+                <Shield className="w-4 h-4 text-purple-400" />
+                <span className="hidden sm:inline">Admin</span>
+              </button>
+            )}
 
             <button
               onClick={onToggleTheme}
