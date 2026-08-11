@@ -21,7 +21,32 @@ import { INITIAL_FLIGHTS } from './data/initialFlights';
 import { Flight, UserProfile } from './types';
 
 export default function App() {
-  const [view, setView] = useState<'landing' | 'dashboard' | 'album'>('dashboard');
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(() => {
+    try {
+      const savedUser = localStorage.getItem('flydiary_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading user from localStorage:', e);
+    }
+    return null;
+  });
+
+  const [view, setView] = useState<'landing' | 'dashboard' | 'album'>(() => {
+    try {
+      const hash = typeof window !== 'undefined' ? window.location.hash : '';
+      const search = typeof window !== 'undefined' ? window.location.search : '';
+      const isShared = (hash && hash.includes('u/')) || (search && search.includes('u='));
+      const savedUser = localStorage.getItem('flydiary_user');
+      if (isShared || savedUser) return 'dashboard';
+    } catch (e) {
+      console.warn('Error reading initial view:', e);
+    }
+    return 'landing';
+  });
+
   const [flights, setFlights] = useState<Flight[]>(() => {
     try {
       const saved = localStorage.getItem('flydiary_flights');
@@ -42,19 +67,6 @@ export default function App() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
   const [selectedAirportModal, setSelectedAirportModal] = useState<string | null>(null);
-
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(() => {
-    try {
-      const savedUser = localStorage.getItem('flydiary_user');
-      if (savedUser) {
-        const parsed = JSON.parse(savedUser);
-        if (parsed && typeof parsed === 'object') return parsed;
-      }
-    } catch (e) {
-      console.warn('Error reading user from localStorage:', e);
-    }
-    return { name: 'Denis Piaia', email: 'denis@piaianet.com', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' };
-  });
 
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     try {
@@ -132,6 +144,13 @@ export default function App() {
     }
   }, [currentUser]);
 
+  // Protect Dashboard: redirect to landing if not logged in and no shared link
+  useEffect(() => {
+    if (!currentUser && !sharedUsername && view !== 'landing') {
+      setView('landing');
+    }
+  }, [currentUser, sharedUsername, view]);
+
   const handleAddFlight = (newFlight: Flight) => {
     setFlights((prev) => [newFlight, ...prev]);
     setView('dashboard');
@@ -176,10 +195,28 @@ export default function App() {
     }`}>
       {view === 'landing' ? (
         <LandingPage
-          onExploreDemo={() => setView('dashboard')}
+          onExploreDemo={() => {
+            if (currentUser || sharedUsername) {
+              setView('dashboard');
+            } else {
+              setIsAuthModalOpen(true);
+            }
+          }}
           onOpenLogin={() => setIsAuthModalOpen(true)}
-          onOpenImport={() => setIsImportModalOpen(true)}
-          onOpenAddFlight={() => setIsAddModalOpen(true)}
+          onOpenImport={() => {
+            if (currentUser) {
+              setIsImportModalOpen(true);
+            } else {
+              setIsAuthModalOpen(true);
+            }
+          }}
+          onOpenAddFlight={() => {
+            if (currentUser) {
+              setIsAddModalOpen(true);
+            } else {
+              setIsAuthModalOpen(true);
+            }
+          }}
           onOpenAdmin={() => setIsAdminModalOpen(true)}
           isDarkMode={isDarkMode}
           onToggleTheme={() => setIsDarkMode(!isDarkMode)}

@@ -69,13 +69,53 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
+    if (password.length < 4) {
+      setStatusMsg('A senha deve ter pelo menos 4 caracteres.');
+      return;
+    }
+
+    // Save & validate accounts in localStorage
+    let userName = name;
+    try {
+      const savedAccountsStr = localStorage.getItem('flydiary_registered_accounts');
+      const accountsMap: Record<string, { name: string; email: string; password?: string }> = savedAccountsStr
+        ? JSON.parse(savedAccountsStr)
+        : {};
+
+      const lowerEmail = email.toLowerCase().trim();
+
+      if (isRegister) {
+        accountsMap[lowerEmail] = {
+          name: name.trim(),
+          email: lowerEmail,
+          password: password,
+        };
+        localStorage.setItem('flydiary_registered_accounts', JSON.stringify(accountsMap));
+      } else {
+        const existingAcc = accountsMap[lowerEmail];
+        if (existingAcc) {
+          if (existingAcc.password && existingAcc.password !== password) {
+            setStatusMsg('Senha incorreta. Verifique suas credenciais.');
+            return;
+          }
+          if (existingAcc.name) {
+            userName = existingAcc.name;
+          }
+        } else {
+          userName = email.split('@')[0];
+        }
+      }
+    } catch (err) {
+      console.warn('LocalStorage registered accounts error:', err);
+    }
+
     const userObj = {
-      name: isRegister ? name : email.split('@')[0],
-      email: email,
+      name: isRegister ? name.trim() : (userName || email.split('@')[0]),
+      email: email.trim(),
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
     };
 
-    setStatusMsg('Conectando e sincronizando seu FlyDiary...');
+    setStatusMsg(isRegister ? 'Conta criada com sucesso! Entrando...' : 'Conectando ao seu FlyDiary...');
     saveUserRecord(userObj, 'email');
 
     setTimeout(() => {
