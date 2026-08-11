@@ -60,7 +60,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
           {/* ================= REAL AIRPLANE SVG SILHOUETTE DEFINITIONS ================= */}
           
           {/* 1. AIRPLANE: Standard Commercial Passenger Jet (e.g. A320/B737) */}
-          <g id="svg-airplane">
+          <g id="svg-airplane" transform="scale(0.5)">
             <path
               d="M 14 0 
                  C 12 -1.2 8 -2 2 -2.2
@@ -82,7 +82,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
           </g>
 
           {/* 2. JUMBO PLANE: Widebody 4-Engine Jet (e.g. B747 / A380) */}
-          <g id="svg-jumbo-plane">
+          <g id="svg-jumbo-plane" transform="scale(0.52)">
             <path
               d="M 16 0 
                  C 14 -2 9 -3 3 -3.5
@@ -106,7 +106,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
           </g>
 
           {/* 3. BOMBER: Strategic / Delta-Wing / Concorde Jet */}
-          <g id="svg-bomber">
+          <g id="svg-bomber" transform="scale(0.48)">
             <path
               d="M 15 0 
                  L 7 -2.5
@@ -124,7 +124,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
           </g>
 
           {/* 4. JET PLANE: Sleek Executive / Fighter Jet */}
-          <g id="svg-jet-plane">
+          <g id="svg-jet-plane" transform="scale(0.48)">
             <path
               d="M 16 0
                  L 5 -1.5
@@ -144,7 +144,7 @@ export const DottedWorldMapBackground: React.FC<DottedWorldMapBackgroundProps> =
           </g>
 
           {/* 5. PROPELLER PLANE: Turboprop / Twin Propeller Aircraft */}
-          <g id="svg-propeller-plane">
+          <g id="svg-propeller-plane" transform="scale(0.5)">
             <path
               d="M 11 0
                  C 10 -1.5 6 -2 1 -2
