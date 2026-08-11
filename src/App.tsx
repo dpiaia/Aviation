@@ -14,14 +14,14 @@ import { AddFlightModal } from './components/AddFlightModal';
 import { ImportCsvModal } from './components/ImportCsvModal';
 import { AirportDetailsModal } from './components/AirportDetailsModal';
 import { AdminModal } from './components/AdminModal';
-import { VirtualAlbumModal } from './components/VirtualAlbumModal';
+import { VirtualAlbumPage } from './components/VirtualAlbumPage';
 import { DottedWorldMapBackground } from './components/DottedWorldMapBackground';
 import { LiveDeparturesBoard } from './components/LiveDeparturesBoard';
 import { INITIAL_FLIGHTS } from './data/initialFlights';
 import { Flight, UserProfile } from './types';
 
 export default function App() {
-  const [view, setView] = useState<'landing' | 'dashboard'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'album'>('dashboard');
   const [flights, setFlights] = useState<Flight[]>(() => {
     const saved = localStorage.getItem('flydiary_flights');
     return saved ? JSON.parse(saved) : INITIAL_FLIGHTS;
@@ -33,7 +33,6 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
-  const [isAlbumModalOpen, setIsAlbumModalOpen] = useState<boolean>(false);
   const [selectedAirportModal, setSelectedAirportModal] = useState<string | null>(null);
 
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(() => {
@@ -172,7 +171,7 @@ export default function App() {
           {/* App Navigation Header */}
           <Header
             onSelectDashboard={() => setView('dashboard')}
-            onOpenAlbumModal={() => setIsAlbumModalOpen(true)}
+            onOpenAlbumModal={() => setView('album')}
             onOpenAddModal={() => setIsAddModalOpen(true)}
             onOpenImportModal={() => setIsImportModalOpen(true)}
             isDarkMode={isDarkMode}
@@ -183,7 +182,7 @@ export default function App() {
             currentUser={currentUser}
             userProfile={userProfile}
             onLogout={() => setCurrentUser(null)}
-            activeTab={isAlbumModalOpen ? 'album' : 'dashboard'}
+            activeTab={view === 'album' ? 'album' : 'dashboard'}
           />
 
           {/* Live Departures Ticker Bar */}
@@ -206,25 +205,33 @@ export default function App() {
           )}
 
           {/* Main Content Area */}
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-8">
-            {/* KPI Overview Cards */}
-            <StatsOverview flights={flights} isDarkMode={isDarkMode} />
+          {view === 'album' ? (
+            <VirtualAlbumPage
+              isDarkMode={isDarkMode}
+              flightsCount={flights.length}
+              onBackToDashboard={() => setView('dashboard')}
+            />
+          ) : (
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-8">
+              {/* KPI Overview Cards */}
+              <StatsOverview flights={flights} isDarkMode={isDarkMode} />
 
-            {/* Interactive Flight Route Map */}
-            <InteractiveFlightMap flights={flights} onSelectAirport={handleSelectAirport} isDarkMode={isDarkMode} />
+              {/* Interactive Flight Route Map */}
+              <InteractiveFlightMap flights={flights} onSelectAirport={handleSelectAirport} isDarkMode={isDarkMode} />
 
-            {/* Chart Section: Line Chart per Year + Total Monthly Bars */}
-            <MonthlyFlightsChart flights={flights} isDarkMode={isDarkMode} />
+              {/* Chart Section: Line Chart per Year + Total Monthly Bars */}
+              <MonthlyFlightsChart flights={flights} isDarkMode={isDarkMode} />
 
-            {/* Aircraft 3-Column Section: Specific Models, Grouped Families, Manufacturers */}
-            <AircraftColumns flights={flights} isDarkMode={isDarkMode} />
+              {/* Aircraft 3-Column Section: Specific Models, Grouped Families, Manufacturers */}
+              <AircraftColumns flights={flights} isDarkMode={isDarkMode} />
 
-            {/* Curiosity & Records Cards */}
-            <CuriosityCards flights={flights} onSelectAirport={handleSelectAirport} isDarkMode={isDarkMode} />
+              {/* Curiosity & Records Cards */}
+              <CuriosityCards flights={flights} onSelectAirport={handleSelectAirport} isDarkMode={isDarkMode} />
 
-            {/* Flight Log History Table */}
-            <FlightLogTable flights={flights} onSelectAirport={handleSelectAirport} isDarkMode={isDarkMode} />
-          </main>
+              {/* Flight Log History Table */}
+              <FlightLogTable flights={flights} onSelectAirport={handleSelectAirport} isDarkMode={isDarkMode} />
+            </main>
+          )}
 
           {/* Tactical Immersive Footer */}
           <footer className={`border-t backdrop-blur-md py-6 font-mono text-[10px] relative z-10 transition-colors ${
@@ -304,13 +311,6 @@ export default function App() {
           setCurrentUser(user);
           setUserProfile((prev) => ({ ...prev, name: user.name, email: user.email }));
         }}
-        flightsCount={flights.length}
-      />
-
-      <VirtualAlbumModal
-        isOpen={isAlbumModalOpen}
-        onClose={() => setIsAlbumModalOpen(false)}
-        isDarkMode={isDarkMode}
         flightsCount={flights.length}
       />
     </div>
