@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { motion, AnimatePresence } from 'motion/react';
-import { Map as MapIcon, Plane, Navigation, Filter, RotateCcw, Info, Calendar, Building2, Check, ArrowRight } from 'lucide-react';
+import { Map as MapIcon, Plane, Navigation, Filter, RotateCcw, Info, Calendar, Building2, Check, ArrowRight, Globe2 } from 'lucide-react';
 import { Flight } from '../types';
-import { parseAirport, AirportLocation } from '../utils/airportCoordinates';
+import { parseAirport, AirportLocation, extractCountry } from '../utils/airportCoordinates';
 
 interface InteractiveFlightMapProps {
   flights: Flight[];
@@ -22,6 +22,37 @@ interface RouteStat {
   recentDate: string;
 }
 
+function matchCountryCount(featureName: string, featureIso: string, countryCounts: Record<string, number>): number {
+  const nameLower = (featureName || '').toLowerCase();
+  const isoUpper = (featureIso || '').toUpperCase();
+
+  let count = 0;
+  Object.entries(countryCounts).forEach(([cName, cCount]) => {
+    const cLower = cName.toLowerCase();
+    if (
+      (cLower === 'brasil' && (nameLower.includes('brazil') || isoUpper === 'BRA')) ||
+      (cLower === 'eua' && (nameLower.includes('united states') || nameLower.includes('america') || isoUpper === 'USA')) ||
+      (cLower === 'portugal' && (nameLower.includes('portugal') || isoUpper === 'PRT')) ||
+      (cLower === 'frança' && (nameLower.includes('france') || isoUpper === 'FRA')) ||
+      (cLower === 'espanha' && (nameLower.includes('spain') || isoUpper === 'ESP')) ||
+      (cLower === 'alemanha' && (nameLower.includes('germany') || isoUpper === 'DEU')) ||
+      (cLower === 'reino unido' && (nameLower.includes('united kingdom') || nameLower.includes('britain') || isoUpper === 'GBR')) ||
+      (cLower === 'argentina' && (nameLower.includes('argentina') || isoUpper === 'ARG')) ||
+      (cLower === 'chile' && (nameLower.includes('chile') || isoUpper === 'CHL')) ||
+      (cLower === 'colômbia' && (nameLower.includes('colombia') || isoUpper === 'COL')) ||
+      (cLower === 'méxico' && (nameLower.includes('mexico') || isoUpper === 'MEX')) ||
+      (cLower === 'panamá' && (nameLower.includes('panama') || isoUpper === 'PAN')) ||
+      (cLower === 'peru' && (nameLower.includes('peru') || isoUpper === 'PER')) ||
+      (cLower === 'uruguai' && (nameLower.includes('uruguay') || isoUpper === 'URY')) ||
+      (nameLower === cLower)
+    ) {
+      count += cCount;
+    }
+  });
+
+  return count;
+}
+
 export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = true }: InteractiveFlightMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -33,7 +64,29 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
   const [selectedAirline, setSelectedAirline] = useState<string>('ALL');
   const [selectedAirportIata, setSelectedAirportIata] = useState<string>('ALL');
   const [activeRoute, setActiveRoute] = useState<RouteStat | null>(null);
-  const [mapMode, setMapMode] = useState<'routes' | 'nodes'>('routes');
+  const [mapMode, setMapMode] = useState<'routes' | 'nodes' | 'countries'>('routes');
+  const [geoJsonData, setGeoJsonData] = useState<any>(null);
+
+  // Load GeoJSON for world countries choropleth
+  useEffect(() => {
+    let isMounted = true;
+    fetch('https://cdn.jsdelivr.net/gh/johan/world-geojson@master/countries.geo.json')
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted) setGeoJsonData(data);
+      })
+      .catch(() => {
+        fetch('https://raw.githubusercontent.com/johan/world-geojson/master/countries.geo.json')
+          .then((res) => res.json())
+          .then((data) => {
+            if (isMounted) setGeoJsonData(data);
+          })
+          .catch((e) => console.warn('GeoJSON load fallback error:', e));
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Extract unique years & airlines
   const availableYears = useMemo(() => {
@@ -72,16 +125,23 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
   }, [flights, selectedYear, selectedAirline, selectedAirportIata]);
 
   // Process Airports & Route Stats
-  const { airportsMap, routeStatsList, totalRoutesCount } = useMemo(() => {
+  const { airportsMap, routeStatsList, totalRoutesCount, countryStats } = useMemo(() => {
     type AirportEntry = { info: AirportLocation; totalCount: number; inbound: number; outbound: number };
     type RouteEntry = { from: AirportLocation; to: AirportLocation; count: number; airlines: Set<string>; aircrafts: Set<string>; dates: string[] };
 
     const airports = new Map<string, AirportEntry>();
     const routesMap = new Map<string, RouteEntry>();
+    const countriesCount: Record<string, number> = {};
 
     filteredFlights.forEach((f) => {
       const fromLoc = parseAirport(f.from);
       const toLoc = parseAirport(f.to);
+
+      // Track country visits
+      const cFrom = extractCountry(fromLoc.city, fromLoc.iata);
+      const cTo = extractCountry(toLoc.city, toLoc.iata);
+      countriesCount[cFrom] = (countriesCount[cFrom] || 0) + 1;
+      countriesCount[cTo] = (countriesCount[cTo] || 0) + 1;
 
       // Register origin
       if (!airports.has(fromLoc.iata)) {
@@ -99,7 +159,7 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
       toEntry.totalCount += 1;
       toEntry.inbound += 1;
 
-      // Register route pair (bidirectional order key for grouping)
+      // Register route pair
       const routeKey = [fromLoc.iata, toLoc.iata].sort().join(' ➔ ');
       if (!routesMap.has(routeKey)) {
         routesMap.set(routeKey, {
@@ -132,6 +192,7 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
       airportsMap: airports,
       routeStatsList: routeStats,
       totalRoutesCount: routeStats.length,
+      countryStats: countriesCount,
     };
   }, [filteredFlights]);
 
@@ -195,54 +256,107 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
 
     const bounds = L.latLngBounds([]);
 
+    // 0. Render GeoJSON Countries Choropleth Layer
+    if (geoJsonData) {
+      const geoJsonLayer = L.geoJSON(geoJsonData, {
+        style: (feature) => {
+          const name = feature?.properties?.name || feature?.properties?.NAME || '';
+          const iso = feature?.id || feature?.properties?.ISO_A3 || '';
+          const flightCount = matchCountryCount(name, iso, countryStats);
+
+          if (flightCount === 0) {
+            return {
+              fillColor: isDarkMode ? '#0f172a' : '#e2e8f0',
+              fillOpacity: mapMode === 'countries' ? 0.35 : 0.08,
+              color: isDarkMode ? '#334155' : '#cbd5e1',
+              weight: mapMode === 'countries' ? 1.2 : 0.6,
+            };
+          }
+
+          // Dynamic gradient intensity based on number of visits
+          let fillColor = '#fdba74'; // 1-2 flights (light orange)
+          if (flightCount > 20) fillColor = '#7c2d12';     // 21+ flights (dark maroon/orange)
+          else if (flightCount > 10) fillColor = '#c2410c'; // 11-20 flights (dark orange)
+          else if (flightCount > 5) fillColor = '#ea580c';  // 6-10 flights (brand orange)
+          else if (flightCount > 2) fillColor = '#f97316';  // 3-5 flights (medium orange)
+
+          return {
+            fillColor,
+            fillOpacity: mapMode === 'countries' ? 0.85 : 0.45,
+            color: '#ea580c',
+            weight: mapMode === 'countries' ? 2 : 1.2,
+          };
+        },
+        onEachFeature: (feature, layer) => {
+          const name = feature?.properties?.name || feature?.properties?.NAME || 'País';
+          const iso = feature?.id || feature?.properties?.ISO_A3 || '';
+          const flightCount = matchCountryCount(name, iso, countryStats);
+
+          if (flightCount > 0) {
+            layer.bindTooltip(
+              `<div style="font-family: sans-serif; padding: 6px; font-size: 12px; font-weight: bold; color: #ffffff;">
+                <div style="display: flex; align-items: center; gap: 4px;">📍 <span>${name}</span></div>
+                <div style="color: #fdba74; font-size: 11px; margin-top: 3px; font-family: monospace;">✈️ <strong>${flightCount}</strong> voos/trajetos</div>
+              </div>`,
+              { sticky: true, className: 'custom-country-tooltip' }
+            );
+          }
+        },
+      });
+
+      geoJsonLayer.addTo(layerGroup);
+    }
+
     // 1. Draw Airport Markers
-    airportsMap.forEach((ap, iata) => {
-      const loc = ap.info;
-      bounds.extend([loc.lat, loc.lng]);
+    if (mapMode === 'routes' || mapMode === 'nodes') {
+      airportsMap.forEach((ap, iata) => {
+        const loc = ap.info;
+        bounds.extend([loc.lat, loc.lng]);
 
-      const isSelected = selectedAirportIata === iata;
-      const size = Math.min(36, Math.max(22, 18 + ap.totalCount));
+        const isSelected = selectedAirportIata === iata;
+        const size = Math.min(36, Math.max(22, 18 + ap.totalCount));
 
-      const markerHtml = `
-        <div class="relative flex items-center justify-center group cursor-pointer">
-          <div class="absolute -inset-1 rounded-full bg-blue-500/30 blur-sm ${isSelected ? 'animate-ping opacity-75' : 'opacity-40'}"></div>
-          <div class="relative flex items-center justify-center rounded-full bg-slate-950 border-2 ${isSelected ? 'border-amber-400 text-amber-300' : 'border-blue-400 text-blue-200'} shadow-[0_0_15px_rgba(59,130,246,0.6)] font-mono font-bold text-[10px] px-2 py-0.5 whitespace-nowrap">
-            <span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-400' : 'bg-blue-400'} mr-1 animate-pulse"></span>
-            ${loc.iata}
+        const markerHtml = `
+          <div class="relative flex items-center justify-center group cursor-pointer">
+            <div class="absolute -inset-1 rounded-full bg-blue-500/30 blur-sm ${isSelected ? 'animate-ping opacity-75' : 'opacity-40'}"></div>
+            <div class="relative flex items-center justify-center rounded-full bg-slate-950 border-2 ${isSelected ? 'border-amber-400 text-amber-300' : 'border-blue-400 text-blue-200'} shadow-[0_0_15px_rgba(59,130,246,0.6)] font-mono font-bold text-[10px] px-2 py-0.5 whitespace-nowrap">
+              <span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-400' : 'bg-blue-400'} mr-1 animate-pulse"></span>
+              ${loc.iata}
+            </div>
           </div>
-        </div>
-      `;
+        `;
 
-      const customIcon = L.divIcon({
-        html: markerHtml,
-        className: 'custom-airport-icon',
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2],
-      });
+        const customIcon = L.divIcon({
+          html: markerHtml,
+          className: 'custom-airport-icon',
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        });
 
-      const marker = L.marker([loc.lat, loc.lng], { icon: customIcon });
+        const marker = L.marker([loc.lat, loc.lng], { icon: customIcon });
 
-      const popupContent = `
-        <div style="font-family: sans-serif; padding: 4px; color: #f8fafc;">
-          <div style="font-weight: 800; font-size: 13px; color: #38bdf8;">${loc.name} (${loc.iata})</div>
-          <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${loc.city}</div>
-          <div style="margin-top: 8px; border-top: 1px solid #334155; padding-top: 6px; font-size: 11px; display: flex; gap: 8px;">
-            <span>Total: <strong>${ap.totalCount} voos</strong></span>
-            <span>(Partidas: ${ap.outbound} | Chegadas: ${ap.inbound})</span>
+        const popupContent = `
+          <div style="font-family: sans-serif; padding: 4px; color: #f8fafc;">
+            <div style="font-weight: 800; font-size: 13px; color: #38bdf8;">${loc.name} (${loc.iata})</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${loc.city}</div>
+            <div style="margin-top: 8px; border-top: 1px solid #334155; padding-top: 6px; font-size: 11px; display: flex; gap: 8px;">
+              <span>Total: <strong>${ap.totalCount} voos</strong></span>
+              <span>(Partidas: ${ap.outbound} | Chegadas: ${ap.inbound})</span>
+            </div>
           </div>
-        </div>
-      `;
+        `;
 
-      marker.bindPopup(popupContent, {
-        className: 'custom-leaflet-popup',
+        marker.bindPopup(popupContent, {
+          className: 'custom-leaflet-popup',
+        });
+
+        marker.on('click', () => {
+          setSelectedAirportIata(iata);
+        });
+
+        marker.addTo(layerGroup);
       });
-
-      marker.on('click', () => {
-        setSelectedAirportIata(iata);
-      });
-
-      marker.addTo(layerGroup);
-    });
+    }
 
     // 2. Draw Route Arc Polylines
     if (mapMode === 'routes') {
@@ -349,7 +463,7 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Mode switch */}
-          <div className={`flex items-center border rounded-xl p-1 ${
+          <div className={`flex items-center border rounded-xl p-1 gap-1 ${
             isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
           }`}>
             <button
@@ -371,6 +485,17 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
               }`}
             >
               Aeroportos
+            </button>
+            <button
+              onClick={() => setMapMode('countries')}
+              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                mapMode === 'countries'
+                  ? 'bg-[#EC6726] text-white shadow-xs font-bold'
+                  : isDarkMode ? 'text-amber-400 hover:text-amber-300' : 'text-[#EC6726] hover:text-[#d9581d]'
+              }`}
+            >
+              <Globe2 className="w-3.5 h-3.5" />
+              Países Visitados
             </button>
           </div>
 
@@ -453,7 +578,13 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
         </div>
 
         {/* Quick KPI stats pill */}
-        <div className={`flex items-center gap-3 font-mono text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+        <div className={`flex items-center gap-2 flex-wrap font-mono text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+          <span className={`flex items-center gap-1 border px-2.5 py-1 rounded-lg ${
+            isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
+          }`}>
+            <Globe2 className="w-3 h-3 text-[#EC6726]" />
+            <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{Object.keys(countryStats).length}</strong> Países Visitados
+          </span>
           <span className={`flex items-center gap-1 border px-2.5 py-1 rounded-lg ${
             isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
           }`}>
@@ -555,32 +686,71 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
         </AnimatePresence>
       </div>
 
-      {/* Top Routes Ranking Bar below Map */}
-      <div className="relative z-10 mt-4 pt-3 border-t border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-400 uppercase tracking-wider text-[11px]">
-            Rotas Mais Frequentes:
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {routeStatsList.slice(0, 4).map((r, idx) => (
-              <button
-                key={r.key}
-                onClick={() => setActiveRoute(r)}
-                className={`px-2.5 py-1 rounded-xl text-[11px] font-mono border transition-all cursor-pointer ${
-                  activeRoute?.key === r.key
-                    ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold'
-                    : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-blue-500/50'
-                }`}
-              >
-                #{idx + 1} {r.fromAirport.iata} ➔ {r.toAirport.iata} ({r.totalFlights})
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Top Routes & Visited Countries Ranking Bar below Map */}
+      <div className="relative z-10 mt-4 pt-3 border-t border-slate-800 flex flex-col gap-3 text-xs">
+        {mapMode === 'countries' ? (
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-[#EC6726] uppercase tracking-wider text-[11px] flex items-center gap-1">
+                <Globe2 className="w-3.5 h-3.5" />
+                Países Mais Visitados:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {(Object.entries(countryStats) as [string, number][])
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([country, count]: [string, number], idx) => {
+                    let colorBg = 'bg-orange-500/20 text-orange-300 border-orange-500/40';
+                    if (count > 20) colorBg = 'bg-red-900/40 text-red-200 border-red-500/60 font-black';
+                    else if (count > 10) colorBg = 'bg-orange-600/30 text-orange-200 border-orange-500/50 font-bold';
+                    else if (count > 5) colorBg = 'bg-amber-600/20 text-amber-300 border-amber-500/40';
 
-        <span className="text-[11px] text-slate-500 font-mono">
-          DICA: Clique nos aeroportos ou linhas de rota para filtrar conexões
-        </span>
+                    return (
+                      <span
+                        key={country}
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-mono border ${colorBg}`}
+                      >
+                        #{idx + 1} {country}: <strong>{count} voos</strong>
+                      </span>
+                    );
+                  })}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
+              <span>Intensidade:</span>
+              <span className="px-1.5 py-0.5 rounded bg-orange-300/30 text-orange-200">1-2</span>
+              <span className="px-1.5 py-0.5 rounded bg-orange-500/40 text-orange-100">3-5</span>
+              <span className="px-1.5 py-0.5 rounded bg-orange-700/60 text-white">6-10</span>
+              <span className="px-1.5 py-0.5 rounded bg-red-900/80 text-white font-bold">11+</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-400 uppercase tracking-wider text-[11px]">
+                Rotas Mais Frequentes:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {routeStatsList.slice(0, 4).map((r, idx) => (
+                  <button
+                    key={r.key}
+                    onClick={() => setActiveRoute(r)}
+                    className={`px-2.5 py-1 rounded-xl text-[11px] font-mono border transition-all cursor-pointer ${
+                      activeRoute?.key === r.key
+                        ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold'
+                        : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-blue-500/50'
+                    }`}
+                  >
+                    #{idx + 1} {r.fromAirport.iata} ➔ {r.toAirport.iata} ({r.totalFlights})
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <span className="text-[11px] text-slate-500 font-mono">
+              DICA: Clique nos aeroportos ou linhas de rota para filtrar conexões
+            </span>
+          </div>
+        )}
       </div>
     </motion.section>
   );

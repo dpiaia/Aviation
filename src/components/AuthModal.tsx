@@ -40,7 +40,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
       lastActive: new Date().toISOString().replace('T', ' ').substring(0, 16),
       flightCount: 5,
-      role: userObj.email === 'dpiaia@gmail.com' || userObj.email.includes('admin') ? 'admin' : 'user',
+      role: userObj.email.toLowerCase() === 'denis@piaianet.com' || userObj.email.toLowerCase() === 'dpiaia@gmail.com' || userObj.email.toLowerCase().includes('admin') ? 'admin' : 'user',
       status: 'active',
       country: 'Brasil'
     };

@@ -35,7 +35,7 @@ export default function App() {
 
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(() => {
     const savedUser = localStorage.getItem('flydiary_user');
-    return savedUser ? JSON.parse(savedUser) : { name: 'Denis Piaia', email: 'denis@flydiary.app' };
+    return savedUser ? JSON.parse(savedUser) : { name: 'Denis Piaia', email: 'denis@piaianet.com', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' };
   });
 
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
@@ -45,7 +45,7 @@ export default function App() {
       : {
           username: 'denispiaia',
           name: 'Denis Piaia',
-          email: 'denis@flydiary.app',
+          email: 'denis@piaianet.com',
           isPrivate: false,
           password: '',
           bio: 'Entusiasta de Aviação Comercial & Spotter',
@@ -183,6 +183,7 @@ export default function App() {
             onOpenAdminModal={() => setIsAdminModalOpen(true)}
             currentUser={currentUser}
             userProfile={userProfile}
+            onLogout={() => setCurrentUser(null)}
           />
 
           {/* Shared User Banner if viewing a friend's profile */}

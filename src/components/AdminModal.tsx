@@ -40,8 +40,21 @@ interface AdminModalProps {
 // Initial Seed Data for Demo & First Run
 const SEED_USERS: RegisteredUser[] = [
   {
-    id: 'usr_001',
+    id: 'usr_admin_denis',
     name: 'Denis Piaia',
+    email: 'denis@piaianet.com',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+    provider: 'google',
+    createdAt: '2026-08-01 10:15',
+    lastActive: '2026-08-11 08:45',
+    flightCount: 58,
+    role: 'admin',
+    status: 'active',
+    country: 'Brasil (VCP)'
+  },
+  {
+    id: 'usr_001',
+    name: 'Denis Piaia (Gmail)',
     email: 'dpiaia@gmail.com',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
     provider: 'google',
