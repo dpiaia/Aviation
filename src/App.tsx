@@ -23,8 +23,16 @@ import { Flight, UserProfile } from './types';
 export default function App() {
   const [view, setView] = useState<'landing' | 'dashboard' | 'album'>('dashboard');
   const [flights, setFlights] = useState<Flight[]>(() => {
-    const saved = localStorage.getItem('flydiary_flights');
-    return saved ? JSON.parse(saved) : INITIAL_FLIGHTS;
+    try {
+      const saved = localStorage.getItem('flydiary_flights');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading flights from localStorage:', e);
+    }
+    return INITIAL_FLIGHTS;
   });
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -36,22 +44,36 @@ export default function App() {
   const [selectedAirportModal, setSelectedAirportModal] = useState<string | null>(null);
 
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(() => {
-    const savedUser = localStorage.getItem('flydiary_user');
-    return savedUser ? JSON.parse(savedUser) : { name: 'Denis Piaia', email: 'denis@piaianet.com', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' };
+    try {
+      const savedUser = localStorage.getItem('flydiary_user');
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading user from localStorage:', e);
+    }
+    return { name: 'Denis Piaia', email: 'denis@piaianet.com', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150' };
   });
 
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
-    const savedProfile = localStorage.getItem('flydiary_profile');
-    return savedProfile
-      ? JSON.parse(savedProfile)
-      : {
-          username: 'denispiaia',
-          name: 'Denis Piaia',
-          email: 'denis@piaianet.com',
-          isPrivate: false,
-          password: '',
-          bio: 'Entusiasta de Aviação Comercial & Spotter',
-        };
+    try {
+      const savedProfile = localStorage.getItem('flydiary_profile');
+      if (savedProfile) {
+        const parsed = JSON.parse(savedProfile);
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading profile from localStorage:', e);
+    }
+    return {
+      username: 'denispiaia',
+      name: 'Denis Piaia',
+      email: 'denis@piaianet.com',
+      isPrivate: false,
+      password: '',
+      bio: 'Entusiasta de Aviação Comercial & Spotter',
+    };
   });
 
   // Share URL Routing State

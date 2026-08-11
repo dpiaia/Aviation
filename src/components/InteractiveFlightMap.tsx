@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { motion, AnimatePresence } from 'motion/react';
 import { Map as MapIcon, Plane, Navigation, Filter, RotateCcw, Info, Calendar, Building2, Check, ArrowRight, Globe2 } from 'lucide-react';
 import { Flight } from '../types';
-import { parseAirport, AirportLocation, extractCountry } from '../utils/airportCoordinates';
+import { parseAirport, AirportLocation, extractCountry, extractCountryCode } from '../utils/airportCoordinates';
 
 interface InteractiveFlightMapProps {
   flights: Flight[];
@@ -22,22 +22,29 @@ interface RouteStat {
   recentDate: string;
 }
 
+interface AirportEntry {
+  info: AirportLocation;
+  totalCount: number;
+  inbound: number;
+  outbound: number;
+}
+
 // Country Flags & Centroid Coordinates Map for Country Overlay Markers
-const COUNTRY_METADATA: Record<string, { flag: string; lat: number; lng: number }> = {
-  'Brasil': { flag: '🇧🇷', lat: -14.235, lng: -51.925 },
-  'EUA': { flag: '🇺🇸', lat: 37.0902, lng: -95.7129 },
-  'Portugal': { flag: '🇵🇹', lat: 39.3999, lng: -8.2245 },
-  'França': { flag: '🇫🇷', lat: 46.2276, lng: 2.2137 },
-  'Espanha': { flag: '🇪🇸', lat: 40.4637, lng: -3.7492 },
-  'Alemanha': { flag: '🇩🇪', lat: 51.1657, lng: 10.4515 },
-  'Reino Unido': { flag: '🇬🇧', lat: 55.3781, lng: -3.436 },
-  'Argentina': { flag: '🇦🇷', lat: -38.4161, lng: -63.6167 },
-  'Chile': { flag: '🇨🇱', lat: -35.6751, lng: -71.543 },
-  'Colômbia': { flag: '🇨🇴', lat: 4.5709, lng: -74.2973 },
-  'México': { flag: '🇲🇽', lat: 23.6345, lng: -102.5528 },
-  'Panamá': { flag: '🇵🇦', lat: 8.538, lng: -80.7821 },
-  'Peru': { flag: '🇵🇪', lat: -9.19, lng: -75.0152 },
-  'Uruguai': { flag: '🇺🇾', lat: -32.5228, lng: -55.7658 },
+const COUNTRY_METADATA: Record<string, { flag: string; lat: number; lng: number; code: string }> = {
+  'Brasil': { flag: '🇧🇷', lat: -14.235, lng: -51.925, code: 'BRA' },
+  'EUA': { flag: '🇺🇸', lat: 37.0902, lng: -95.7129, code: 'USA' },
+  'Portugal': { flag: '🇵🇹', lat: 39.3999, lng: -8.2245, code: 'PRT' },
+  'França': { flag: '🇫🇷', lat: 46.2276, lng: 2.2137, code: 'FRA' },
+  'Espanha': { flag: '🇪🇸', lat: 40.4637, lng: -3.7492, code: 'ESP' },
+  'Alemanha': { flag: '🇩🇪', lat: 51.1657, lng: 10.4515, code: 'DEU' },
+  'Reino Unido': { flag: '🇬🇧', lat: 55.3781, lng: -3.436, code: 'GBR' },
+  'Argentina': { flag: '🇦🇷', lat: -38.4161, lng: -63.6167, code: 'ARG' },
+  'Chile': { flag: '🇨🇱', lat: -35.6751, lng: -71.543, code: 'CHL' },
+  'Colômbia': { flag: '🇨🇴', lat: 4.5709, lng: -74.2973, code: 'COL' },
+  'México': { flag: '🇲🇽', lat: 23.6345, lng: -102.5528, code: 'MEX' },
+  'Panamá': { flag: '🇵🇦', lat: 8.538, lng: -80.7821, code: 'PAN' },
+  'Peru': { flag: '🇵🇪', lat: -9.19, lng: -75.0152, code: 'PER' },
+  'Uruguai': { flag: '🇺🇾', lat: -32.5228, lng: -55.7658, code: 'URY' },
 };
 
 // Built-in lightweight fallback GeoJSON polygons so map is NEVER empty
@@ -49,7 +56,7 @@ const FALLBACK_GEOJSON = {
     { type: 'Feature', id: 'PRT', properties: { name: 'Portugal', NAME: 'Portugal' }, geometry: { type: 'Polygon', coordinates: [[[-9.5, 37], [-6.2, 37], [-6.2, 42.1], [-9.5, 42.1], [-9.5, 37]]] } },
     { type: 'Feature', id: 'FRA', properties: { name: 'France', NAME: 'France' }, geometry: { type: 'Polygon', coordinates: [[[-4.8, 43.5], [8.2, 43.5], [8.2, 51.1], [-4.8, 51.1], [-4.8, 43.5]]] } },
     { type: 'Feature', id: 'ESP', properties: { name: 'Spain', NAME: 'Spain' }, geometry: { type: 'Polygon', coordinates: [[[-9.3, 36], [3.3, 36], [3.3, 43.8], [-9.3, 43.8], [-9.3, 36]]] } },
-    { type: 'Feature', id: 'DEU', properties: { name: 'Germany', NAME: 'Germany' }, geometry: { type: 'Polygon', coordinates: [[[5.8, 47.3], [15, 47.3], [15, 55], [5.8, 55], [[5.8, 47.3]]]] } },
+    { type: 'Feature', id: 'DEU', properties: { name: 'Germany', NAME: 'Germany' }, geometry: { type: 'Polygon', coordinates: [[[5.8, 47.3], [15, 47.3], [15, 55], [5.8, 55], [5.8, 47.3]]] } },
     { type: 'Feature', id: 'GBR', properties: { name: 'United Kingdom', NAME: 'United Kingdom' }, geometry: { type: 'Polygon', coordinates: [[[-8, 50], [1.7, 50], [1.7, 58.6], [-8, 58.6], [-8, 50]]] } },
     { type: 'Feature', id: 'ARG', properties: { name: 'Argentina', NAME: 'Argentina' }, geometry: { type: 'Polygon', coordinates: [[[-73.5, -21.8], [-53.6, -26.2], [-65, -55], [-73.5, -21.8]]] } },
     { type: 'Feature', id: 'CHL', properties: { name: 'Chile', NAME: 'Chile' }, geometry: { type: 'Polygon', coordinates: [[[-75.6, -17.5], [-68.5, -17.5], [-68.5, -55], [-75.6, -55], [-75.6, -17.5]]] } },
@@ -61,10 +68,21 @@ const FALLBACK_GEOJSON = {
   ]
 };
 
-function matchCountryCount(featureName: string, featureIso: string, countryCounts: Record<string, number>): number {
+function matchCountryCount(
+  featureName: string,
+  featureIso: string,
+  countryCounts: Record<string, number>,
+  countryCodeCounts?: Record<string, number>
+): number {
   const nameLower = (featureName || '').toLowerCase().trim();
   const isoUpper = (featureIso || '').toUpperCase().trim();
 
+  // 1. Direct ISO 3166-1 alpha-3 code match first
+  if (isoUpper && countryCodeCounts && countryCodeCounts[isoUpper] !== undefined) {
+    return countryCodeCounts[isoUpper];
+  }
+
+  // 2. Name-based match fallback
   let count = 0;
   Object.entries(countryCounts).forEach(([cName, cCount]) => {
     const cLower = cName.toLowerCase().trim();
@@ -85,8 +103,7 @@ function matchCountryCount(featureName: string, featureIso: string, countryCount
       (cLower === 'peru' && (nameLower.includes('peru') || isoUpper === 'PER')) ||
       (cLower === 'uruguai' && (nameLower.includes('uruguay') || nameLower.includes('uruguai') || isoUpper === 'URY')) ||
       nameLower === cLower ||
-      nameLower.includes(cLower) ||
-      cLower.includes(nameLower);
+      (nameLower.length >= 4 && cLower.length >= 4 && (nameLower.includes(cLower) || cLower.includes(nameLower)));
 
     if (isMatch) {
       count += cCount;
@@ -168,13 +185,21 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
   }, [flights, selectedYear, selectedAirline, selectedAirportIata]);
 
   // Process Airports & Route Stats
-  const { airportsMap, routeStatsList, totalRoutesCount, countryStats } = useMemo(() => {
-    type AirportEntry = { info: AirportLocation; totalCount: number; inbound: number; outbound: number };
+  const { airportsMap, routeStatsList, totalRoutesCount, countryStats, countryCodeStats, uniqueCountryCodes } = useMemo<{
+    airportsMap: Map<string, AirportEntry>;
+    routeStatsList: RouteStat[];
+    totalRoutesCount: number;
+    countryStats: Record<string, number>;
+    countryCodeStats: Record<string, number>;
+    uniqueCountryCodes: string[];
+  }>(() => {
     type RouteEntry = { from: AirportLocation; to: AirportLocation; count: number; airlines: Set<string>; aircrafts: Set<string>; dates: string[] };
 
     const airports = new Map<string, AirportEntry>();
     const routesMap = new Map<string, RouteEntry>();
     const countriesCount: Record<string, number> = {};
+    const countryCodesCount: Record<string, number> = {};
+    const uniqueCodesSet = new Set<string>();
 
     filteredFlights.forEach((f) => {
       const fromLoc = parseAirport(f.from);
@@ -182,9 +207,18 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
 
       // Track country visits
       const cFrom = extractCountry(fromLoc.city, fromLoc.iata);
+      const codeFrom = extractCountryCode(fromLoc.city, fromLoc.iata);
       const cTo = extractCountry(toLoc.city, toLoc.iata);
+      const codeTo = extractCountryCode(toLoc.city, toLoc.iata);
+
       countriesCount[cFrom] = (countriesCount[cFrom] || 0) + 1;
       countriesCount[cTo] = (countriesCount[cTo] || 0) + 1;
+
+      countryCodesCount[codeFrom] = (countryCodesCount[codeFrom] || 0) + 1;
+      countryCodesCount[codeTo] = (countryCodesCount[codeTo] || 0) + 1;
+
+      uniqueCodesSet.add(codeFrom);
+      uniqueCodesSet.add(codeTo);
 
       // Register origin
       if (!airports.has(fromLoc.iata)) {
@@ -236,6 +270,8 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
       routeStatsList: routeStats,
       totalRoutesCount: routeStats.length,
       countryStats: countriesCount,
+      countryCodeStats: countryCodesCount,
+      uniqueCountryCodes: Array.from(uniqueCodesSet),
     };
   }, [filteredFlights]);
 
@@ -310,7 +346,7 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
         style: (feature) => {
           const name = feature?.properties?.name || feature?.properties?.NAME || '';
           const iso = feature?.id || feature?.properties?.ISO_A3 || '';
-          const flightCount = matchCountryCount(name, iso, countryStats);
+          const flightCount = matchCountryCount(name, iso, countryStats, countryCodeStats);
 
           if (flightCount === 0) {
             return {
@@ -338,7 +374,7 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
         onEachFeature: (feature, layer) => {
           const name = feature?.properties?.name || feature?.properties?.NAME || 'País';
           const iso = feature?.id || feature?.properties?.ISO_A3 || '';
-          const flightCount = matchCountryCount(name, iso, countryStats);
+          const flightCount = matchCountryCount(name, iso, countryStats, countryCodeStats);
 
           if (flightCount > 0) {
             layer.bindTooltip(
@@ -364,12 +400,12 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
         let lat = meta.lat;
         let lng = meta.lng;
         if (!lat && !lng) {
-          const matchingAirports = Array.from(airportsMap.values()).filter(
+          const matchingAirports = (Array.from(airportsMap.values()) as AirportEntry[]).filter(
             (ap) => extractCountry(ap.info.city, ap.info.iata) === cName
           );
           if (matchingAirports.length > 0) {
-            lat = matchingAirports.reduce((acc, a) => acc + a.info.lat, 0) / matchingAirports.length;
-            lng = matchingAirports.reduce((acc, a) => acc + a.info.lng, 0) / matchingAirports.length;
+            lat = matchingAirports.reduce((acc: number, a: AirportEntry) => acc + a.info.lat, 0) / matchingAirports.length;
+            lng = matchingAirports.reduce((acc: number, a: AirportEntry) => acc + a.info.lng, 0) / matchingAirports.length;
           }
         }
 
@@ -815,12 +851,12 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
                       let lat = meta.lat;
                       let lng = meta.lng;
                       if (!lat && !lng) {
-                        const matchingAirports = Array.from(airportsMap.values()).filter(
+                        const matchingAirports = (Array.from(airportsMap.values()) as AirportEntry[]).filter(
                           (ap) => extractCountry(ap.info.city, ap.info.iata) === country
                         );
                         if (matchingAirports.length > 0) {
-                          lat = matchingAirports.reduce((acc, a) => acc + a.info.lat, 0) / matchingAirports.length;
-                          lng = matchingAirports.reduce((acc, a) => acc + a.info.lng, 0) / matchingAirports.length;
+                          lat = matchingAirports.reduce((acc: number, a: AirportEntry) => acc + a.info.lat, 0) / matchingAirports.length;
+                          lng = matchingAirports.reduce((acc: number, a: AirportEntry) => acc + a.info.lng, 0) / matchingAirports.length;
                         }
                       }
                       if (lat && lng) {
