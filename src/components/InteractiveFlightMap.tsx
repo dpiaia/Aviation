@@ -125,7 +125,23 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
   const [selectedAirportIata, setSelectedAirportIata] = useState<string>('ALL');
   const [activeRoute, setActiveRoute] = useState<RouteStat | null>(null);
   const [mapMode, setMapMode] = useState<'routes' | 'nodes' | 'countries'>('routes');
+  const [isAutoRotating, setIsAutoRotating] = useState<boolean>(true);
   const [geoJsonData, setGeoJsonData] = useState<any>(FALLBACK_GEOJSON);
+
+  // Auto-rotate map views periodically (every 6 seconds) between routes, aeroportos, and países visitados
+  useEffect(() => {
+    if (!isAutoRotating) return;
+
+    const timer = setInterval(() => {
+      setMapMode((prev) => {
+        if (prev === 'routes') return 'nodes';
+        if (prev === 'nodes') return 'countries';
+        return 'routes';
+      });
+    }, 6000);
+
+    return () => clearInterval(timer);
+  }, [isAutoRotating]);
 
   // Load GeoJSON for world countries choropleth with multi-source fallback
   useEffect(() => {
@@ -607,7 +623,10 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
             isDarkMode ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
           }`}>
             <button
-              onClick={() => setMapMode('routes')}
+              onClick={() => {
+                setMapMode('routes');
+                setIsAutoRotating(false);
+              }}
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 mapMode === 'routes'
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -617,7 +636,10 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
               Rotas Aéreas
             </button>
             <button
-              onClick={() => setMapMode('nodes')}
+              onClick={() => {
+                setMapMode('nodes');
+                setIsAutoRotating(false);
+              }}
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
                 mapMode === 'nodes'
                   ? 'bg-blue-600 text-white shadow-xs'
@@ -627,7 +649,10 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
               Aeroportos
             </button>
             <button
-              onClick={() => setMapMode('countries')}
+              onClick={() => {
+                setMapMode('countries');
+                setIsAutoRotating(false);
+              }}
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
                 mapMode === 'countries'
                   ? 'bg-[#EC6726] text-white shadow-xs font-bold'
@@ -638,6 +663,22 @@ export function InteractiveFlightMap({ flights, onSelectAirport, isDarkMode = tr
               Países Visitados
             </button>
           </div>
+
+          {/* Auto-rotation Toggle Pill */}
+          <button
+            onClick={() => setIsAutoRotating(!isAutoRotating)}
+            title={isAutoRotating ? 'Clique para pausar a troca automática de visões' : 'Clique para ativar a troca automática de visões'}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[11px] font-mono font-semibold transition-all cursor-pointer ${
+              isAutoRotating
+                ? 'bg-[#EC6726]/10 border-[#EC6726]/40 text-[#EC6726]'
+                : isDarkMode
+                  ? 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${isAutoRotating ? 'bg-[#EC6726] animate-ping' : 'bg-slate-500'}`} />
+            <span>{isAutoRotating ? 'Auto (Alternando)' : 'Auto (Pausado)'}</span>
+          </button>
 
           <button
             onClick={handleResetMap}

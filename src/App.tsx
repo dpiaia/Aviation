@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, Upload, Sparkles } from 'lucide-react';
 import { Header } from './components/Header';
 import { LandingPage } from './components/LandingPage';
 import { AuthModal } from './components/AuthModal';
@@ -19,6 +20,22 @@ import { DottedWorldMapBackground } from './components/DottedWorldMapBackground'
 import { LiveDeparturesBoard } from './components/LiveDeparturesBoard';
 import { INITIAL_FLIGHTS } from './data/initialFlights';
 import { Flight, UserProfile } from './types';
+
+const isDenisUser = (email?: string) => {
+  if (!email) return false;
+  const lower = email.toLowerCase().trim();
+  return lower === 'denis@piaianet.com' || lower === 'dpiaia@gmail.com' || lower.includes('denis');
+};
+
+const getUserFlightsKey = (email?: string) => {
+  if (!email) return 'flydiary_flights_guest';
+  return `flydiary_flights_${email.toLowerCase().trim()}`;
+};
+
+const getUserProfileKey = (email?: string) => {
+  if (!email) return 'flydiary_profile_guest';
+  return `flydiary_profile_${email.toLowerCase().trim()}`;
+};
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(() => {
@@ -49,15 +66,24 @@ export default function App() {
 
   const [flights, setFlights] = useState<Flight[]>(() => {
     try {
-      const saved = localStorage.getItem('flydiary_flights');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      const savedUserStr = localStorage.getItem('flydiary_user');
+      if (savedUserStr) {
+        const user = JSON.parse(savedUserStr);
+        if (user && user.email) {
+          const key = getUserFlightsKey(user.email);
+          const savedFlights = localStorage.getItem(key);
+          if (savedFlights) {
+            const parsed = JSON.parse(savedFlights);
+            if (Array.isArray(parsed)) return parsed;
+          }
+          if (isDenisUser(user.email)) return INITIAL_FLIGHTS;
+          return [];
+        }
       }
     } catch (e) {
       console.warn('Error reading flights from localStorage:', e);
     }
-    return INITIAL_FLIGHTS;
+    return [];
   });
 
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -70,18 +96,43 @@ export default function App() {
 
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     try {
-      const savedProfile = localStorage.getItem('flydiary_profile');
-      if (savedProfile) {
-        const parsed = JSON.parse(savedProfile);
-        if (parsed && typeof parsed === 'object') return parsed;
+      const savedUserStr = localStorage.getItem('flydiary_user');
+      if (savedUserStr) {
+        const user = JSON.parse(savedUserStr);
+        if (user && user.email) {
+          const key = getUserProfileKey(user.email);
+          const savedProf = localStorage.getItem(key);
+          if (savedProf) {
+            const parsed = JSON.parse(savedProf);
+            if (parsed && typeof parsed === 'object') return parsed;
+          }
+          if (isDenisUser(user.email)) {
+            return {
+              username: 'denispiaia',
+              name: 'Denis Piaia',
+              email: user.email,
+              isPrivate: false,
+              password: '',
+              bio: 'Entusiasta de Aviação Comercial & Spotter',
+            };
+          }
+          return {
+            username: user.email.split('@')[0],
+            name: user.name || user.email.split('@')[0],
+            email: user.email,
+            isPrivate: false,
+            password: '',
+            bio: 'Entusiasta de Aviação Comercial & Spotter',
+          };
+        }
       }
     } catch (e) {
       console.warn('Error reading profile from localStorage:', e);
     }
     return {
-      username: 'denispiaia',
-      name: 'Denis Piaia',
-      email: 'denis@piaianet.com',
+      username: 'visitante',
+      name: 'Visitante',
+      email: '',
       isPrivate: false,
       password: '',
       bio: 'Entusiasta de Aviação Comercial & Spotter',
@@ -127,22 +178,86 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  // Persist flights & profile to localStorage
-  useEffect(() => {
-    localStorage.setItem('flydiary_flights', JSON.stringify(flights));
-  }, [flights]);
-
-  useEffect(() => {
-    localStorage.setItem('flydiary_profile', JSON.stringify(userProfile));
-  }, [userProfile]);
-
+  // Handle user change & load account-isolated flights and profile
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('flydiary_user', JSON.stringify(currentUser));
+      const email = currentUser.email;
+
+      // Load isolated flights
+      const flightsKey = getUserFlightsKey(email);
+      const savedFlightsStr = localStorage.getItem(flightsKey);
+      if (savedFlightsStr) {
+        try {
+          const parsed = JSON.parse(savedFlightsStr);
+          if (Array.isArray(parsed)) setFlights(parsed);
+          else setFlights(isDenisUser(email) ? INITIAL_FLIGHTS : []);
+        } catch (e) {
+          setFlights(isDenisUser(email) ? INITIAL_FLIGHTS : []);
+        }
+      } else {
+        setFlights(isDenisUser(email) ? INITIAL_FLIGHTS : []);
+      }
+
+      // Load isolated profile
+      const profileKey = getUserProfileKey(email);
+      const savedProfStr = localStorage.getItem(profileKey);
+      if (savedProfStr) {
+        try {
+          const parsed = JSON.parse(savedProfStr);
+          if (parsed && typeof parsed === 'object') setUserProfile(parsed);
+          else {
+            setUserProfile({
+              username: email.split('@')[0],
+              name: currentUser.name,
+              email: currentUser.email,
+              isPrivate: false,
+              password: '',
+              bio: 'Entusiasta de Aviação Comercial & Spotter',
+            });
+          }
+        } catch (e) {
+          setUserProfile({
+            username: email.split('@')[0],
+            name: currentUser.name,
+            email: currentUser.email,
+            isPrivate: false,
+            password: '',
+            bio: 'Entusiasta de Aviação Comercial & Spotter',
+          });
+        }
+      } else {
+        const newProf: UserProfile = {
+          username: email.split('@')[0],
+          name: currentUser.name,
+          email: currentUser.email,
+          isPrivate: false,
+          password: '',
+          bio: 'Entusiasta de Aviação Comercial & Spotter',
+        };
+        setUserProfile(newProf);
+        localStorage.setItem(profileKey, JSON.stringify(newProf));
+      }
     } else {
       localStorage.removeItem('flydiary_user');
+      setFlights([]);
     }
-  }, [currentUser]);
+  }, [currentUser?.email]);
+
+  // Persist flights & profile per user
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(getUserFlightsKey(currentUser.email), JSON.stringify(flights));
+    }
+    localStorage.setItem('flydiary_flights', JSON.stringify(flights));
+  }, [flights, currentUser]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(getUserProfileKey(currentUser.email), JSON.stringify(userProfile));
+    }
+    localStorage.setItem('flydiary_profile', JSON.stringify(userProfile));
+  }, [userProfile, currentUser]);
 
   // Protect Dashboard: redirect to landing if not logged in and no shared link
   useEffect(() => {
@@ -272,6 +387,65 @@ export default function App() {
             />
           ) : (
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-8">
+              {/* Onboarding Callout Card for New Accounts with 0 Flights */}
+              {flights.length === 0 && (
+                <div className={`p-6 rounded-2xl border ${
+                  isDarkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'
+                } shadow-xl relative overflow-hidden`}>
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#EC6726]/10 to-transparent rounded-bl-full pointer-events-none" />
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+                    <div className="space-y-2 max-w-2xl">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-md bg-[#EC6726]/10 text-[#EC6726] border border-[#EC6726]/30 font-mono text-xs font-bold">
+                          PAINEL PESSOAL PRONTO
+                        </span>
+                        <span className="text-xs text-slate-400 font-mono">Boas-vindas ao seu FlyDiary</span>
+                      </div>
+                      <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        Olá, {currentUser?.name || userProfile.name}! Vamos registrar seu primeiro voo?
+                      </h2>
+                      <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                        Seu diário de bordo está limpo para você cadastrar suas próprias viagens. Adicione um voo manualmente, importe um CSV do Flightradar24/MyFlightradar, ou carregue dados de teste para ver o painel em ação.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                      <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="flex-1 md:flex-initial px-4 py-2.5 rounded-xl bg-[#EC6726] hover:bg-[#d9581d] text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Adicionar Voo
+                      </button>
+                      <button
+                        onClick={() => setIsImportModalOpen(true)}
+                        className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                          isDarkMode
+                            ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200'
+                            : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
+                        }`}
+                      >
+                        <Upload className="w-4 h-4 text-blue-400" />
+                        Importar CSV
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFlights(INITIAL_FLIGHTS);
+                        }}
+                        className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                          isDarkMode
+                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
+                            : 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100'
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                        Carregar Voos de Exemplo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* KPI Overview Cards */}
               <StatsOverview flights={flights} isDarkMode={isDarkMode} />
 
