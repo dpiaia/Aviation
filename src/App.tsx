@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { LandingPage } from './components/LandingPage';
 import { AuthModal } from './components/AuthModal';
+import { ProfileShareModal } from './components/ProfileShareModal';
+import { PublicPasswordBarrier } from './components/PublicPasswordBarrier';
 import { StatsOverview } from './components/StatsOverview';
 import { MonthlyFlightsChart } from './components/MonthlyFlightsChart';
 import { InteractiveFlightMap } from './components/InteractiveFlightMap';
@@ -13,17 +15,70 @@ import { ImportCsvModal } from './components/ImportCsvModal';
 import { AirportDetailsModal } from './components/AirportDetailsModal';
 import { DottedWorldMapBackground } from './components/DottedWorldMapBackground';
 import { INITIAL_FLIGHTS } from './data/initialFlights';
-import { Flight } from './types';
+import { Flight, UserProfile } from './types';
 
 export default function App() {
   const [view, setView] = useState<'landing' | 'dashboard'>('landing');
-  const [flights, setFlights] = useState<Flight[]>(INITIAL_FLIGHTS);
+  const [flights, setFlights] = useState<Flight[]>(() => {
+    const saved = localStorage.getItem('flydiary_flights');
+    return saved ? JSON.parse(saved) : INITIAL_FLIGHTS;
+  });
+
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [selectedAirportModal, setSelectedAirportModal] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(null);
+
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(() => {
+    const savedUser = localStorage.getItem('flydiary_user');
+    return savedUser ? JSON.parse(savedUser) : { name: 'Denis Piaia', email: 'denis@flydiary.app' };
+  });
+
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    const savedProfile = localStorage.getItem('flydiary_profile');
+    return savedProfile
+      ? JSON.parse(savedProfile)
+      : {
+          username: 'denispiaia',
+          name: 'Denis Piaia',
+          email: 'denis@flydiary.app',
+          isPrivate: false,
+          password: '',
+          bio: 'Entusiasta de Aviação Comercial & Spotter',
+        };
+  });
+
+  // Share URL Routing State
+  const [sharedUsername, setSharedUsername] = useState<string | null>(null);
+  const [isPrivateUnlocked, setIsPrivateUnlocked] = useState<boolean>(false);
+
+  // Check URL parameters for shared profile links like #u/denispiaia or ?u=denispiaia
+  useEffect(() => {
+    const checkSharedUrl = () => {
+      const hash = window.location.hash;
+      const search = window.location.search;
+
+      let extractedUsername: string | null = null;
+
+      if (hash && hash.includes('u/')) {
+        extractedUsername = hash.split('u/')[1]?.split('?')[0]?.trim() || null;
+      } else if (search && search.includes('u=')) {
+        const params = new URLSearchParams(search);
+        extractedUsername = params.get('u');
+      }
+
+      if (extractedUsername) {
+        setSharedUsername(extractedUsername.toLowerCase());
+        setView('dashboard');
+      }
+    };
+
+    checkSharedUrl();
+    window.addEventListener('hashchange', checkSharedUrl);
+    return () => window.removeEventListener('hashchange', checkSharedUrl);
+  }, []);
 
   // Sync dark mode class on document element
   useEffect(() => {
@@ -33,6 +88,23 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  // Persist flights & profile to localStorage
+  useEffect(() => {
+    localStorage.setItem('flydiary_flights', JSON.stringify(flights));
+  }, [flights]);
+
+  useEffect(() => {
+    localStorage.setItem('flydiary_profile', JSON.stringify(userProfile));
+  }, [userProfile]);
+
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('flydiary_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('flydiary_user');
+    }
+  }, [currentUser]);
 
   const handleAddFlight = (newFlight: Flight) => {
     setFlights((prev) => [newFlight, ...prev]);
@@ -47,6 +119,30 @@ export default function App() {
   const handleSelectAirport = (airportCode: string) => {
     setSelectedAirportModal(airportCode);
   };
+
+  const handleAuthenticatePrivate = (pass: string) => {
+    if (pass === userProfile.password) {
+      setIsPrivateUnlocked(true);
+      return true;
+    }
+    return false;
+  };
+
+  // If a shared link is opened and profile is PRIVATE and not unlocked yet
+  if (sharedUsername && userProfile.isPrivate && !isPrivateUnlocked) {
+    return (
+      <PublicPasswordBarrier
+        username={sharedUsername}
+        onAuthenticate={handleAuthenticatePrivate}
+        onGoHome={() => {
+          setSharedUsername(null);
+          window.location.hash = '';
+          setView('landing');
+        }}
+        isDarkMode={isDarkMode}
+      />
+    );
+  }
 
   return (
     <div className={`min-h-screen font-sans selection:bg-[#EC6726]/30 selection:text-amber-200 transition-colors duration-300 relative overflow-x-hidden ${
@@ -74,10 +170,32 @@ export default function App() {
             onOpenImportModal={() => setIsImportModalOpen(true)}
             isDarkMode={isDarkMode}
             onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
-            onShowLanding={() => setView('landing')}
+            onShowLanding={() => {
+              setSharedUsername(null);
+              window.location.hash = '';
+              setView('landing');
+            }}
             onOpenAuthModal={() => setIsAuthModalOpen(true)}
+            onOpenProfileModal={() => setIsProfileModalOpen(true)}
             currentUser={currentUser}
+            userProfile={userProfile}
           />
+
+          {/* Shared User Banner if viewing a friend's profile */}
+          {sharedUsername && (
+            <div className="bg-[#EC6726]/10 border-b border-[#EC6726]/30 py-2.5 px-4 text-center text-xs font-mono text-[#EC6726] flex items-center justify-center gap-2">
+              <span>✈️ Você está visualizando o FlyDiary de <strong>@{sharedUsername}</strong></span>
+              <button
+                onClick={() => {
+                  setSharedUsername(null);
+                  window.location.hash = '';
+                }}
+                className="underline font-bold hover:text-white cursor-pointer ml-2"
+              >
+                Voltar ao Meu Dashboard
+              </button>
+            </div>
+          )}
 
           {/* Main Content Area */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-8">
@@ -140,9 +258,27 @@ export default function App() {
         currentUser={currentUser}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
+          setUserProfile((prev) => ({ ...prev, name: user.name, email: user.email }));
           setView('dashboard');
         }}
         onLogout={() => setCurrentUser(null)}
+        isDarkMode={isDarkMode}
+      />
+
+      <ProfileShareModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        profile={userProfile}
+        onUpdateProfile={(updated) => {
+          setUserProfile(updated);
+          if (currentUser) {
+            setCurrentUser({ ...currentUser, name: updated.name });
+          }
+        }}
+        onLogout={() => {
+          setCurrentUser(null);
+          setIsProfileModalOpen(false);
+        }}
         isDarkMode={isDarkMode}
       />
 

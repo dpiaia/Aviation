@@ -21,6 +21,17 @@ export interface Flight {
   aircraftId?: string;
 }
 
+export interface UserProfile {
+  username: string; // e.g. "denispiaia"
+  name: string;
+  email: string;
+  avatar?: string;
+  isPrivate: boolean; // public or password protected
+  password?: string; // required if isPrivate === true
+  googleSheetUrl?: string; // sync link
+  bio?: string;
+}
+
 export interface MonthYearData {
   monthIndex: number; // 0..11
   monthName: string;  // Janeiro..Dezembro
@@ -55,4 +66,19 @@ export interface ManufacturerStat {
   percentage: number;
   topModel: string;
   registrations: string[];
+}
+
+export interface ColumnMapping {
+  date: string;
+  flightNumber: string;
+  from: string;
+  to: string;
+  depTime: string;
+  arrTime: string;
+  duration: string;
+  airline: string;
+  aircraft: string;
+  registration: string;
+  seatNumber: string;
+  note: string;
 }

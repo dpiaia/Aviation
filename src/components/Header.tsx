@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Plane, Plus, FileSpreadsheet, Sun, Moon, Home, User, UserCheck } from 'lucide-react';
+import { Plane, Plus, FileSpreadsheet, Sun, Moon, Home, User, UserCheck, Share2, Shield, Lock, Globe } from 'lucide-react';
+import { UserProfile } from '../types';
 
 interface HeaderProps {
   totalFlights: number;
@@ -10,7 +11,9 @@ interface HeaderProps {
   onToggleDarkMode: () => void;
   onShowLanding: () => void;
   onOpenAuthModal: () => void;
+  onOpenProfileModal: () => void;
   currentUser: { name: string; email: string; avatar?: string } | null;
+  userProfile?: UserProfile;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,7 +24,9 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDarkMode,
   onShowLanding,
   onOpenAuthModal,
+  onOpenProfileModal,
   currentUser,
+  userProfile,
 }) => {
   return (
     <header className={`sticky top-0 z-30 border-b backdrop-blur-xl transition-colors duration-300 ${
@@ -73,9 +78,26 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden sm:inline">Apresentação</span>
           </button>
 
+          {/* Share Profile Button */}
+          <button
+            onClick={onOpenProfileModal}
+            className="px-3 py-2 rounded-xl bg-[#EC6726]/10 text-[#EC6726] border border-[#EC6726]/30 hover:bg-[#EC6726]/20 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+            title="Compartilhar Dashboard & Configurar Link Pessoal"
+          >
+            <Share2 className="w-4 h-4 text-[#EC6726]" />
+            <span className="hidden sm:inline font-mono">
+              @{userProfile?.username || 'meu-link'}
+            </span>
+            {userProfile?.isPrivate ? (
+              <Lock className="w-3 h-3 text-amber-400 shrink-0" />
+            ) : (
+              <Globe className="w-3 h-3 text-emerald-400 shrink-0" />
+            )}
+          </button>
+
           {/* User Auth Button */}
           <button
-            onClick={onOpenAuthModal}
+            onClick={currentUser ? onOpenProfileModal : onOpenAuthModal}
             className={`px-3 py-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               currentUser
                 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
