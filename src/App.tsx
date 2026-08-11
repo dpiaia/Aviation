@@ -15,6 +15,7 @@ import { ImportCsvModal } from './components/ImportCsvModal';
 import { AirportDetailsModal } from './components/AirportDetailsModal';
 import { AdminModal } from './components/AdminModal';
 import { DottedWorldMapBackground } from './components/DottedWorldMapBackground';
+import { LiveDeparturesBoard } from './components/LiveDeparturesBoard';
 import { INITIAL_FLIGHTS } from './data/initialFlights';
 import { Flight, UserProfile } from './types';
 
@@ -185,6 +186,9 @@ export default function App() {
             userProfile={userProfile}
             onLogout={() => setCurrentUser(null)}
           />
+
+          {/* Live Departures Ticker Bar */}
+          <LiveDeparturesBoard isDarkMode={isDarkMode} />
 
           {/* Shared User Banner if viewing a friend's profile */}
           {sharedUsername && (
