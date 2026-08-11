@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import { Plane, Clock, Award, Building2, Sparkles, ShieldCheck } from 'lucide-react';
 import { Flight } from '../types';
 import { parseDurationMinutes, formatTotalHours } from '../utils/flightAnalytics';
@@ -11,6 +11,8 @@ interface StatsOverviewProps {
 }
 
 export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights, isDarkMode = true }) => {
+  const { scrollY } = useScroll();
+
   // 1. Total Flights
   const totalFlights = flights.length;
 
@@ -57,6 +59,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights, isDarkMod
       glowColor: 'bg-[#EC6726]/10',
       iconBg: 'bg-[#EC6726] text-white',
       textColor: 'text-[#EC6726]',
+      parallaxRange: [0, -15],
     },
     {
       id: 'total-hours',
@@ -70,6 +73,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights, isDarkMod
       glowColor: 'bg-sky-500/10',
       iconBg: 'bg-sky-500 text-white',
       textColor: 'text-sky-400',
+      parallaxRange: [0, -25],
     },
     {
       id: 'unique-tails',
@@ -83,6 +87,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights, isDarkMod
       glowColor: 'bg-emerald-500/10',
       iconBg: 'bg-emerald-600 text-white',
       textColor: 'text-emerald-400',
+      parallaxRange: [0, -10],
     },
     {
       id: 'top-airline',
@@ -98,6 +103,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights, isDarkMod
       glowColor: 'bg-amber-500/10',
       iconBg: 'bg-amber-500 text-white',
       textColor: 'text-amber-400',
+      parallaxRange: [0, -20],
     },
   ];
 
@@ -107,17 +113,22 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ flights, isDarkMod
         const IconComponent = stat.icon;
         const isAirlineCard = stat.id === 'top-airline' && stat.value !== 'N/A';
 
+        // Staggered parallax translation per card
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const cardY = useTransform(scrollY, [0, 400], [0, stat.parallaxRange[1]]);
+
         return (
           <motion.div
             key={stat.id}
-            initial={{ opacity: 0, y: 15 }}
+            style={{ y: cardY }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: idx * 0.08 }}
-            whileHover={{ y: -4 }}
+            transition={{ duration: 0.4, delay: idx * 0.08 }}
+            whileHover={{ y: -8, scale: 1.02 }}
             className={`relative p-5 rounded-2xl border ${stat.accentColor} ${
               isDarkMode
-                ? 'bg-slate-900/70 shadow-[0_8px_25px_rgba(0,0,0,0.4)] text-white'
-                : 'bg-white/90 shadow-[0_4px_20px_rgba(0,0,0,0.06)] text-slate-900'
+                ? 'bg-slate-900/75 shadow-[0_8px_25px_rgba(0,0,0,0.4)] text-white'
+                : 'bg-white/95 shadow-[0_4px_20px_rgba(0,0,0,0.06)] text-slate-900'
             } backdrop-blur-xl overflow-hidden group transition-all duration-300 flex flex-col justify-between`}
           >
             {/* Ambient subtle glow background */}

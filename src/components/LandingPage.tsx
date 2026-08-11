@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState } from 'react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import {
   Plane,
   FileSpreadsheet,
-  MapPin,
-  BarChart3,
   Globe2,
   ChevronRight,
-  Sparkles,
   Trophy,
   ArrowRight,
   Moon,
@@ -17,20 +14,18 @@ import {
   Ticket,
   Luggage,
   QrCode,
-  Clock,
-  Navigation,
   Share2,
-  Compass,
   CheckCircle2,
-  Check,
-  Copy,
   Radio,
   Sliders,
   PlaneTakeoff,
-  PlaneLanding,
-  Building2,
-  Layers
+  Layers,
+  Sparkles,
+  Barcode,
+  Navigation,
+  Compass
 } from 'lucide-react';
+import { DottedWorldMapBackground } from './DottedWorldMapBackground';
 
 interface LandingPageProps {
   onExploreDemo: () => void;
@@ -54,12 +49,11 @@ const SAMPLE_TICKETS = [
     aircraft: 'Airbus A320neo',
     registration: 'PR-XBB',
     gate: '214B',
-    seat: '01A (Janela / First)',
+    seat: '01A (Window)',
     depTime: '08:30',
     arrTime: '09:30',
     duration: '1h 00m',
     color: 'from-[#EC6726] to-[#d9581d]',
-    logoBg: 'bg-red-600',
     classType: 'Executiva',
   },
   {
@@ -77,7 +71,6 @@ const SAMPLE_TICKETS = [
     arrTime: '16:00',
     duration: '1h 45m',
     color: 'from-orange-500 to-[#EC6726]',
-    logoBg: 'bg-orange-500',
     classType: 'Gol Premium',
   },
   {
@@ -95,7 +88,6 @@ const SAMPLE_TICKETS = [
     arrTime: '11:15',
     duration: '1h 15m',
     color: 'from-blue-600 to-cyan-500',
-    logoBg: 'bg-blue-600',
     classType: 'Espaço Azul',
   },
   {
@@ -108,13 +100,12 @@ const SAMPLE_TICKETS = [
     aircraft: 'Airbus A380-800',
     registration: 'A6-EEO',
     gate: 'G32',
-    seat: '02K (Primeira Classe)',
+    seat: '02K (Suite)',
     depTime: '01:25',
     arrTime: '22:55',
     duration: '14h 30m',
     color: 'from-amber-600 to-yellow-500',
-    logoBg: 'bg-amber-600',
-    classType: 'First Class Suite',
+    classType: 'First Class',
   },
 ];
 
@@ -137,32 +128,64 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const [selectedTicketIdx, setSelectedTicketIdx] = useState<number>(0);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [flightModeTab, setFlightModeTab] = useState<'myflightradar' | 'excel' | 'manual'>('myflightradar');
 
   const ticket = SAMPLE_TICKETS[selectedTicketIdx];
 
-  const handleCopyDemoLink = () => {
-    navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#u/denispiaia');
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
-  };
+  // Parallax Scroll Hooks using Framer Motion
+  const { scrollY } = useScroll();
+
+  // Multi-layered Parallax Transforms
+  const heroTextY = useTransform(scrollY, [0, 600], [0, 80]);
+  const heroTicketY = useTransform(scrollY, [0, 600], [0, 140]);
+  const ticketRotate = useTransform(scrollY, [0, 500], [0, -8]);
+  
+  // Floating Background Aviation Parallax Objects
+  const floatingPlaneY1 = useTransform(scrollY, [0, 1000], [0, -220]);
+  const floatingPlaneY2 = useTransform(scrollY, [0, 1200], [0, 180]);
+  const floatingCompassRotate = useTransform(scrollY, [0, 1000], [0, 180]);
+
+  // Differential Parallax for the 3 Import Method Boarding Passes
+  const card1Y = useTransform(scrollY, [200, 900], [40, -40]);
+  const card2Y = useTransform(scrollY, [200, 900], [80, -20]);
+  const card3Y = useTransform(scrollY, [200, 900], [120, 0]);
 
   return (
     <div className={`min-h-screen transition-colors duration-300 font-sans relative overflow-x-hidden ${
-      isDarkMode ? 'bg-[#020617] text-slate-100' : 'bg-slate-50 text-slate-900'
+      isDarkMode ? 'bg-[#020617] text-slate-100' : 'bg-slate-100 text-slate-900'
     }`}>
-      {/* Dynamic Runway Glow Background */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-tr from-[#EC6726]/15 via-amber-500/10 to-blue-600/10 blur-3xl pointer-events-none rounded-full" />
+      {/* Animated World Map Background with Beams & Particles (Identical to Dashboard) */}
+      <DottedWorldMapBackground isDarkMode={isDarkMode} />
+
+      {/* Parallax Floating Aviation Elements */}
+      <motion.div
+        style={{ y: floatingPlaneY1 }}
+        className="fixed top-24 right-12 pointer-events-none opacity-20 z-0 hidden lg:block"
+      >
+        <Plane className="w-56 h-56 text-[#EC6726] -rotate-45 blur-[1px]" />
+      </motion.div>
+
+      <motion.div
+        style={{ y: floatingPlaneY2 }}
+        className="fixed top-[45%] left-8 pointer-events-none opacity-15 z-0 hidden md:block"
+      >
+        <Navigation className="w-48 h-48 text-amber-500 rotate-12 blur-xs" />
+      </motion.div>
+
+      <motion.div
+        style={{ rotate: floatingCompassRotate }}
+        className="fixed bottom-20 right-8 pointer-events-none opacity-10 z-0 hidden lg:block"
+      >
+        <Compass className="w-40 h-40 text-blue-500 blur-xs" />
+      </motion.div>
 
       {/* Top Airport Control Navigation Bar */}
       <nav className={`sticky top-0 z-50 backdrop-blur-xl border-b transition-colors ${
-        isDarkMode ? 'bg-[#020617]/85 border-slate-800/80' : 'bg-white/85 border-slate-200'
+        isDarkMode ? 'bg-[#020617]/85 border-slate-800/80' : 'bg-white/85 border-slate-200 shadow-xs'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <motion.div
-              whileHover={{ scale: 1.05, rotate: 5 }}
+              whileHover={{ scale: 1.08, rotate: 10 }}
               className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EC6726] to-amber-500 text-white flex items-center justify-center shadow-lg shadow-[#EC6726]/30 shrink-0"
             >
               <Plane className="w-5 h-5 -rotate-45" />
@@ -229,13 +252,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <header className="relative pt-10 pb-16 lg:pt-16 lg:pb-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      {/* Hero Section with Multi-Layer Parallax */}
+      <header className="relative pt-10 pb-16 lg:pt-16 lg:pb-24 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
-            {/* Left Copy Column */}
-            <div className="lg:col-span-7 space-y-6 text-left">
+            {/* Left Column: Text with Parallax transform */}
+            <motion.div style={{ y: heroTextY }} className="lg:col-span-7 space-y-6 text-left">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -323,17 +346,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Link Pessoal Compartilhável
                 </span>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Right Interactive Boarding Pass Widget */}
-            <div className="lg:col-span-5 relative">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, rotate: 1 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-4"
-              >
-                {/* Airline Selector Tabs for Boarding Pass Preview */}
+            {/* Right Column: Boarding Pass Widget with Parallax Rotation */}
+            <motion.div style={{ y: heroTicketY, rotate: ticketRotate }} className="lg:col-span-5 relative">
+              <div className="space-y-4">
+                {/* Airline Selector Tabs */}
                 <div className="flex items-center justify-between px-1">
                   <span className="text-[11px] font-mono font-bold text-[#EC6726] uppercase flex items-center gap-1.5">
                     <Ticket className="w-4 h-4" /> Simular Cartão de Embarque
@@ -357,13 +375,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                 </div>
 
-                {/* The Boarding Pass Component */}
+                {/* The Main Boarding Pass Component */}
                 <div className={`p-6 rounded-3xl border shadow-2xl relative overflow-hidden transition-all duration-300 ${
                   isDarkMode
-                    ? 'bg-slate-900/90 border-slate-800 text-slate-100 shadow-orange-950/20'
+                    ? 'bg-slate-900/95 border-slate-800 text-slate-100 shadow-orange-950/30'
                     : 'bg-white border-slate-200 text-slate-900 shadow-slate-300/50'
                 }`}>
-                  {/* Decorative Airline Header Banner */}
+                  {/* Ticket Cutouts */}
+                  <div className={`absolute -left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-slate-800 ${
+                    isDarkMode ? 'bg-[#020617]' : 'bg-slate-100'
+                  }`} />
+                  <div className={`absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-slate-800 ${
+                    isDarkMode ? 'bg-[#020617]' : 'bg-slate-100'
+                  }`} />
+
+                  {/* Header Banner */}
                   <div className={`p-4 -mx-6 -mt-6 bg-gradient-to-r ${ticket.color} text-white flex items-center justify-between mb-5`}>
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-white/20 backdrop-blur-md flex items-center justify-center font-bold text-xs">
@@ -383,7 +409,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </span>
                   </div>
 
-                  {/* IATA Route Large Display */}
+                  {/* Route IATA */}
                   <div className="flex items-center justify-between my-2 font-mono">
                     <div className="text-left">
                       <span className="text-3xl font-black text-[#EC6726] block tracking-tighter">
@@ -418,7 +444,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </div>
                   </div>
 
-                  {/* Flight Info Specs */}
+                  {/* Flight Specs */}
                   <div className={`mt-5 pt-4 border-t border-dashed grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs ${
                     isDarkMode ? 'border-slate-800' : 'border-slate-200'
                   }`}>
@@ -436,7 +462,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </div>
                   </div>
 
-                  {/* Barcode & Luggage Tag Visual Footer */}
+                  {/* Barcode & Footer */}
                   <div className={`mt-5 pt-4 border-t flex items-center justify-between ${
                     isDarkMode ? 'border-slate-800/80 text-slate-400' : 'border-slate-100 text-slate-600'
                   }`}>
@@ -454,15 +480,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            </div>
+              </div>
+            </motion.div>
 
           </div>
         </div>
       </header>
 
       {/* Airport Departure Board (Solari Flap) Ticker */}
-      <section className={`py-6 border-y font-mono text-xs ${
+      <section className={`py-6 border-y font-mono text-xs z-10 relative ${
         isDarkMode ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-900 text-white border-slate-800'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -487,8 +513,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* Feature Section 1: Formas de Subir Seus Voos */}
-      <section className={`py-16 border-t ${isDarkMode ? 'border-slate-800/80 bg-slate-950/40' : 'border-slate-200 bg-white'}`}>
+      {/* Feature Section 1: "Três Maneiras Rápidas" AS REAL BOARDING PASSES WITH PARALLAX STAGGER */}
+      <section className={`py-20 border-t z-10 relative ${isDarkMode ? 'border-slate-800/80 bg-slate-950/40' : 'border-slate-200 bg-white/60'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <span className="text-xs font-bold uppercase tracking-widest text-[#EC6726] font-mono px-3 py-1 rounded-full bg-[#EC6726]/10 border border-[#EC6726]/20 inline-block">
@@ -502,99 +528,231 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* 1. my.Flightradar24 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            {/* BOARDING PASS CARD 1: my.Flightradar24 with Parallax transform */}
             <motion.div
-              whileHover={{ y: -4 }}
-              className={`p-6 rounded-3xl border transition-all relative overflow-hidden group ${
+              style={{ y: card1Y }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              className={`rounded-3xl border shadow-xl relative overflow-hidden transition-all duration-300 flex flex-col justify-between ${
                 isDarkMode
-                  ? 'bg-slate-900/60 border-slate-800 hover:border-[#EC6726]/50'
-                  : 'bg-slate-50 border-slate-200 hover:border-[#EC6726]/50 shadow-sm'
+                  ? 'bg-slate-900/90 border-slate-800 hover:border-[#EC6726]/60 shadow-orange-950/20'
+                  : 'bg-white border-slate-200 hover:border-[#EC6726]/60 shadow-slate-200/50'
               }`}
             >
-              <div className="w-12 h-12 rounded-2xl bg-[#EC6726]/10 border border-[#EC6726]/30 text-[#EC6726] flex items-center justify-center mb-4">
-                <FileSpreadsheet className="w-6 h-6" />
+              {/* Ticket Semicircle Cutouts */}
+              <div className={`absolute -left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border border-slate-800 ${
+                isDarkMode ? 'bg-[#020617]' : 'bg-slate-100'
+              }`} />
+              <div className={`absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border border-slate-800 ${
+                isDarkMode ? 'bg-[#020617]' : 'bg-slate-100'
+              }`} />
+
+              <div>
+                {/* Boarding Pass Stub Header */}
+                <div className="bg-gradient-to-r from-[#EC6726] to-amber-500 p-4 text-white flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-mono text-xs font-bold">
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>PASS 01 • MY.FLIGHTRADAR24</span>
+                  </div>
+                  <span className="text-[10px] font-mono uppercase font-bold bg-white/20 px-2 py-0.5 rounded">
+                    IMPORT DIRETO
+                  </span>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  {/* Boarding Pass Route Display */}
+                  <div className="flex items-center justify-between font-mono bg-slate-800/20 p-3 rounded-2xl border border-slate-700/30">
+                    <div>
+                      <span className="text-2xl font-black text-[#EC6726]">FR24</span>
+                      <span className="text-[10px] text-slate-400 block font-sans">Formato Nativo</span>
+                    </div>
+                    <Plane className="w-5 h-5 text-[#EC6726] -rotate-45" />
+                    <div className="text-right">
+                      <span className="text-2xl font-black text-[#EC6726]">DIARY</span>
+                      <span className="text-[10px] text-slate-400 block font-sans">Sincronizado</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <h3 className={`text-base font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      1. Arquivo CSV Nativo (.csv)
+                    </h3>
+                    <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Exporte o arquivo CSV do my.flightradar24 e faça o upload. Nosso leitor identifica automaticamente rotas, prefixos, horas e companhias.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <span className="text-[10px] font-mono font-bold text-[#EC6726] uppercase tracking-wider bg-[#EC6726]/10 px-2.5 py-1 rounded-md border border-[#EC6726]/20 mb-3 inline-block">
-                Importador Direto
-              </span>
-              <h3 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                1. my.Flightradar24 (.CSV)
-              </h3>
-              <p className={`text-xs leading-relaxed mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Baixe seu arquivo CSV do my.flightradar24 e faça o upload. Nosso leitor identifica automaticamente rotas, prefixos, horas e companhias.
-              </p>
-              <button
-                onClick={onOpenImport}
-                className="text-xs font-bold text-[#EC6726] hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                Importar CSV Agora <ChevronRight className="w-4 h-4" />
-              </button>
+
+              {/* Ticket Tear Line & Action Footer */}
+              <div className={`p-4 border-t border-dashed ${isDarkMode ? 'border-slate-800 bg-slate-950/60' : 'border-slate-200 bg-slate-50'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[10px]">
+                    <Barcode className="w-6 h-5 text-[#EC6726]" />
+                    <span>IMP-FR24</span>
+                  </div>
+
+                  <button
+                    onClick={onOpenImport}
+                    className="px-4 py-2 rounded-xl bg-[#EC6726] hover:bg-[#d9581d] text-white font-bold text-xs shadow-md shadow-[#EC6726]/30 flex items-center gap-1 cursor-pointer transition-all"
+                  >
+                    Importar CSV <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </motion.div>
 
-            {/* 2. Excel + Conciliação De/Para */}
+            {/* BOARDING PASS CARD 2: Excel / Google Sheets with Parallax transform */}
             <motion.div
-              whileHover={{ y: -4 }}
-              className={`p-6 rounded-3xl border transition-all relative overflow-hidden group ${
+              style={{ y: card2Y }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              className={`rounded-3xl border shadow-xl relative overflow-hidden transition-all duration-300 flex flex-col justify-between ${
                 isDarkMode
-                  ? 'bg-slate-900/60 border-slate-800 hover:border-amber-500/50'
-                  : 'bg-slate-50 border-slate-200 hover:border-amber-500/50 shadow-sm'
+                  ? 'bg-slate-900/90 border-slate-800 hover:border-amber-500/60 shadow-amber-950/20'
+                  : 'bg-white border-slate-200 hover:border-amber-500/60 shadow-slate-200/50'
               }`}
             >
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center mb-4">
-                <Sliders className="w-6 h-6" />
+              {/* Ticket Semicircle Cutouts */}
+              <div className={`absolute -left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border border-slate-800 ${
+                isDarkMode ? 'bg-[#020617]' : 'bg-slate-100'
+              }`} />
+              <div className={`absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border border-slate-800 ${
+                isDarkMode ? 'bg-[#020617]' : 'bg-slate-100'
+              }`} />
+
+              <div>
+                {/* Boarding Pass Stub Header */}
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-4 text-white flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-mono text-xs font-bold">
+                    <Sliders className="w-4 h-4" />
+                    <span>PASS 02 • EXCEL & GOOGLE SHEETS</span>
+                  </div>
+                  <span className="text-[10px] font-mono uppercase font-bold bg-white/20 px-2 py-0.5 rounded">
+                    CONCILIAÇÃO
+                  </span>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  {/* Boarding Pass Route Display */}
+                  <div className="flex items-center justify-between font-mono bg-slate-800/20 p-3 rounded-2xl border border-slate-700/30">
+                    <div>
+                      <span className="text-2xl font-black text-amber-500">XLSX</span>
+                      <span className="text-[10px] text-slate-400 block font-sans">Sua Tabela</span>
+                    </div>
+                    <Sliders className="w-5 h-5 text-amber-500" />
+                    <div className="text-right">
+                      <span className="text-2xl font-black text-amber-500">DE/PARA</span>
+                      <span className="text-[10px] text-slate-400 block font-sans">Mapeado</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <h3 className={`text-base font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      2. Conciliação de Colunas ("De / Para")
+                    </h3>
+                    <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Tem suas viagens salvas em Excel ou Google Sheets? Suba o arquivo e vincule cada coluna à estrutura do FlyDiary facilmente.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20 mb-3 inline-block">
-                Conciliação inteligente
-              </span>
-              <h3 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                2. Planilhas Excel & Google Sheets
-              </h3>
-              <p className={`text-xs leading-relaxed mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Tem suas viagens registradas em Excel ou Google Sheets? Suba o arquivo ou sincronize por link com a nossa tela de conciliação de colunas "De / Para".
-              </p>
-              <button
-                onClick={onOpenImport}
-                className="text-xs font-bold text-amber-500 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                Mapear Minha Planilha <ChevronRight className="w-4 h-4" />
-              </button>
+
+              {/* Ticket Tear Line & Action Footer */}
+              <div className={`p-4 border-t border-dashed ${isDarkMode ? 'border-slate-800 bg-slate-950/60' : 'border-slate-200 bg-slate-50'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[10px]">
+                    <Barcode className="w-6 h-5 text-amber-500" />
+                    <span>DE-PARA</span>
+                  </div>
+
+                  <button
+                    onClick={onOpenImport}
+                    className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-500/30 flex items-center gap-1 cursor-pointer transition-all"
+                  >
+                    Mapear Tabela <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </motion.div>
 
-            {/* 3. Registro Manual */}
+            {/* BOARDING PASS CARD 3: Manual Addition with Parallax transform */}
             <motion.div
-              whileHover={{ y: -4 }}
-              className={`p-6 rounded-3xl border transition-all relative overflow-hidden group ${
+              style={{ y: card3Y }}
+              whileHover={{ y: -8, scale: 1.02 }}
+              className={`rounded-3xl border shadow-xl relative overflow-hidden transition-all duration-300 flex flex-col justify-between ${
                 isDarkMode
-                  ? 'bg-slate-900/60 border-slate-800 hover:border-emerald-500/50'
-                  : 'bg-slate-50 border-slate-200 hover:border-emerald-500/50 shadow-sm'
+                  ? 'bg-slate-900/90 border-slate-800 hover:border-emerald-500/60 shadow-emerald-950/20'
+                  : 'bg-white border-slate-200 hover:border-emerald-500/60 shadow-slate-200/50'
               }`}
             >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mb-4">
-                <Plus className="w-6 h-6" />
+              {/* Ticket Semicircle Cutouts */}
+              <div className={`absolute -left-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border border-slate-800 ${
+                isDarkMode ? 'bg-[#020617]' : 'bg-slate-100'
+              }`} />
+              <div className={`absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full border border-slate-800 ${
+                isDarkMode ? 'bg-[#020617]' : 'bg-slate-100'
+              }`} />
+
+              <div>
+                {/* Boarding Pass Stub Header */}
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-4 text-white flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-mono text-xs font-bold">
+                    <Plus className="w-4 h-4" />
+                    <span>PASS 03 • CADASTRO MANUAL</span>
+                  </div>
+                  <span className="text-[10px] font-mono uppercase font-bold bg-white/20 px-2 py-0.5 rounded">
+                    QUICK ADD
+                  </span>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  {/* Boarding Pass Route Display */}
+                  <div className="flex items-center justify-between font-mono bg-slate-800/20 p-3 rounded-2xl border border-slate-700/30">
+                    <div>
+                      <span className="text-2xl font-black text-emerald-500">IATA</span>
+                      <span className="text-[10px] text-slate-400 block font-sans">Origem / Destino</span>
+                    </div>
+                    <PlaneTakeoff className="w-5 h-5 text-emerald-500" />
+                    <div className="text-right">
+                      <span className="text-2xl font-black text-emerald-500">PREFIX</span>
+                      <span className="text-[10px] text-slate-400 block font-sans">Aeronave Exata</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <h3 className={`text-base font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                      3. Registro de Bordo Individual
+                    </h3>
+                    <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                      Acabou de pousar? Adicione novos voos em segundos preenchendo códigos IATA/ICAO, assento, número do voo e modelo de aeronave.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <span className="text-[10px] font-mono font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20 mb-3 inline-block">
-                Inclusão Individual
-              </span>
-              <h3 className={`text-lg font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                3. Registro Manual de Bordo
-              </h3>
-              <p className={`text-xs leading-relaxed mb-4 ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                Acabou de pousar? Adicione novos voos em segundos preenchendo códigos IATA/ICAO, assento, número do voo e modelo de aeronave.
-              </p>
-              <button
-                onClick={onOpenAddFlight}
-                className="text-xs font-bold text-emerald-500 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                Cadastrar Voo Manual <ChevronRight className="w-4 h-4" />
-              </button>
+
+              {/* Ticket Tear Line & Action Footer */}
+              <div className={`p-4 border-t border-dashed ${isDarkMode ? 'border-slate-800 bg-slate-950/60' : 'border-slate-200 bg-slate-50'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[10px]">
+                    <Barcode className="w-6 h-5 text-emerald-500" />
+                    <span>MAN-ADD</span>
+                  </div>
+
+                  <button
+                    onClick={onOpenAddFlight}
+                    className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-md shadow-emerald-500/30 flex items-center gap-1 cursor-pointer transition-all"
+                  >
+                    Registrar Voo <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* AvGeek Features Showcase */}
-      <section className="py-16">
+      <section className="py-16 z-10 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center max-w-2xl mx-auto space-y-3">
             <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#EC6726]">
@@ -606,43 +764,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className={`p-6 rounded-3xl border ${isDarkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <motion.div
+              whileHover={{ y: -6, scale: 1.02 }}
+              className={`p-6 rounded-3xl border transition-all ${isDarkMode ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200'}`}
+            >
               <Globe2 className="w-8 h-8 text-[#EC6726] mb-3" />
-              <h4 className={`text-base font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Mapa de Rotas 3D & 2D</h4>
+              <h4 className={`text-base font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Mapa de Rotas Interativo</h4>
               <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Visualização de rotas com feixes luminosos e busca interativa de aeroportos no globo.
               </p>
-            </div>
+            </motion.div>
 
-            <div className={`p-6 rounded-3xl border ${isDarkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <motion.div
+              whileHover={{ y: -6, scale: 1.02 }}
+              className={`p-6 rounded-3xl border transition-all ${isDarkMode ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200'}`}
+            >
               <Layers className="w-8 h-8 text-amber-500 mb-3" />
               <h4 className={`text-base font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Análise de Frota & Modelos</h4>
               <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Estatísticas separadas por modelos exatos (ex: A320neo, E195-E2) e famílias de fabricantes (Airbus, Boeing, Embraer, ATR).
               </p>
-            </div>
+            </motion.div>
 
-            <div className={`p-6 rounded-3xl border ${isDarkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <motion.div
+              whileHover={{ y: -6, scale: 1.02 }}
+              className={`p-6 rounded-3xl border transition-all ${isDarkMode ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200'}`}
+            >
               <Trophy className="w-8 h-8 text-blue-500 mb-3" />
               <h4 className={`text-base font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Curiosidades & Recordes</h4>
               <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Descubra qual foi seu voo mais longo, aeroporto mais visitado e idade exata de cada avião na data da viagem.
               </p>
-            </div>
+            </motion.div>
 
-            <div className={`p-6 rounded-3xl border ${isDarkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <motion.div
+              whileHover={{ y: -6, scale: 1.02 }}
+              className={`p-6 rounded-3xl border transition-all ${isDarkMode ? 'bg-slate-900/60 border-slate-800' : 'bg-white border-slate-200'}`}
+            >
               <Share2 className="w-8 h-8 text-emerald-500 mb-3" />
               <h4 className={`text-base font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Seu Link Pessoal</h4>
               <p className={`text-xs leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Compartilhe seu mapa e estatísticas com amigos usando um link único no formato <code>flydiary.app/#u/seunome</code>.
               </p>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 border-t border-slate-800/60">
+      <section className="py-16 border-t border-slate-800/60 z-10 relative">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="text-center space-y-2">
             <h2 className={`text-2xl font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -698,7 +868,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* CTA Footer Section */}
-      <section className="py-16 border-t border-slate-800 bg-gradient-to-r from-[#EC6726]/10 via-amber-500/10 to-orange-500/10 relative overflow-hidden">
+      <section className="py-16 border-t border-slate-800 bg-gradient-to-r from-[#EC6726]/10 via-amber-500/10 to-orange-500/10 relative overflow-hidden z-10">
         <div className="max-w-4xl mx-auto px-4 text-center space-y-5">
           <div className="w-12 h-12 mx-auto rounded-2xl bg-[#EC6726] text-white flex items-center justify-center shadow-lg shadow-[#EC6726]/40">
             <Plane className="w-6 h-6 -rotate-45" />
