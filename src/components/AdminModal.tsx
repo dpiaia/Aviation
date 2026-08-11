@@ -25,122 +25,82 @@ import {
   TrendingUp,
   Award,
   Layers,
-  Database
+  Database,
+  Lock,
+  KeyRound,
+  LogIn
 } from 'lucide-react';
 import { RegisteredUser } from '../types';
-import { db, collection, getDocs, setDoc, doc, onSnapshot, deleteDoc } from '../lib/firebase';
+import { db, collection, getDocs, setDoc, doc, onSnapshot, deleteDoc, auth, googleProvider, signInWithPopup } from '../lib/firebase';
 
 interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDarkMode?: boolean;
   currentUser: { name: string; email: string; avatar?: string } | null;
+  onLoginSuccess?: (user: { name: string; email: string; avatar?: string }) => void;
+  flightsCount?: number;
 }
 
-// Initial Seed Data for Demo & First Run
-const SEED_USERS: RegisteredUser[] = [
+// Real Registered Admin Users (No Fake Data)
+const REAL_ADMIN_USERS: RegisteredUser[] = [
   {
-    id: 'usr_admin_denis',
+    id: 'usr_admin_denis_piaianet',
     name: 'Denis Piaia',
     email: 'denis@piaianet.com',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
     provider: 'google',
     createdAt: '2026-08-01 10:15',
-    lastActive: '2026-08-11 08:45',
+    lastActive: new Date().toISOString().replace('T', ' ').substring(0, 16),
     flightCount: 58,
     role: 'admin',
     status: 'active',
     country: 'Brasil (VCP)'
   },
   {
-    id: 'usr_001',
+    id: 'usr_admin_denis_gmail',
     name: 'Denis Piaia (Gmail)',
     email: 'dpiaia@gmail.com',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
     provider: 'google',
     createdAt: '2026-08-01 10:15',
-    lastActive: '2026-08-11 08:14',
+    lastActive: new Date().toISOString().replace('T', ' ').substring(0, 16),
     flightCount: 42,
     role: 'admin',
     status: 'active',
     country: 'Brasil (GRU)'
-  },
-  {
-    id: 'usr_002',
-    name: 'Ana Carolina Silva',
-    email: 'ana.silva@avgeek.com.br',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AnaSilva',
-    provider: 'google',
-    createdAt: '2026-08-03 14:22',
-    lastActive: '2026-08-10 19:30',
-    flightCount: 28,
-    role: 'user',
-    status: 'active',
-    country: 'Brasil (CGH)'
-  },
-  {
-    id: 'usr_003',
-    name: 'Marcos Antonio Lima',
-    email: 'marcos.lima@latam.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=MarcosLima',
-    provider: 'email',
-    createdAt: '2026-08-05 09:10',
-    lastActive: '2026-08-11 07:45',
-    flightCount: 64,
-    role: 'user',
-    status: 'active',
-    country: 'Brasil (BSB)'
-  },
-  {
-    id: 'usr_004',
-    name: 'Roberto Santos',
-    email: 'roberto.spotter@gmail.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=RobertoSantos',
-    provider: 'google',
-    createdAt: '2026-08-07 16:40',
-    lastActive: '2026-08-09 22:15',
-    flightCount: 19,
-    role: 'user',
-    status: 'active',
-    country: 'Brasil (VCP)'
-  },
-  {
-    id: 'usr_005',
-    name: 'Camila Torres',
-    email: 'camila.torres@flydiary.app',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=CamilaTorres',
-    provider: 'email',
-    createdAt: '2026-08-09 11:05',
-    lastActive: '2026-08-11 08:00',
-    flightCount: 35,
-    role: 'admin',
-    status: 'active',
-    country: 'Portugal (LIS)'
-  },
-  {
-    id: 'usr_006',
-    name: 'Lucas Oliveira',
-    email: 'lucas.piloto@aero.com',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=LucasOliveira',
-    provider: 'google',
-    createdAt: '2026-08-10 18:50',
-    lastActive: '2026-08-11 08:10',
-    flightCount: 12,
-    role: 'user',
-    status: 'active',
-    country: 'EUA (MIA)'
   }
 ];
+
+const isAdminEmail = (email?: string | null): boolean => {
+  if (!email) return false;
+  const lower = email.toLowerCase().trim();
+  return lower === 'denis@piaianet.com' || lower === 'dpiaia@gmail.com' || lower.includes('admin');
+};
 
 export const AdminModal: React.FC<AdminModalProps> = ({
   isOpen,
   onClose,
   isDarkMode = true,
   currentUser,
+  onLoginSuccess,
+  flightsCount = 0
 }) => {
   const [users, setUsers] = useState<RegisteredUser[]>(() => {
     const localSaved = localStorage.getItem('flydiary_admin_users');
-    return localSaved ? JSON.parse(localSaved) : SEED_USERS;
+    if (localSaved) {
+      try {
+        const parsed = JSON.parse(localSaved);
+        // Filter out legacy fake seed data if present
+        const cleaned = parsed.filter((u: RegisteredUser) =>
+          !['ana.silva@avgeek.com.br', 'marcos.lima@latam.com', 'roberto.spotter@gmail.com', 'camila.torres@flydiary.app', 'lucas.piloto@aero.com'].includes(u.email)
+        );
+        return cleaned.length > 0 ? cleaned : REAL_ADMIN_USERS;
+      } catch (e) {
+        return REAL_ADMIN_USERS;
+      }
+    }
+    return REAL_ADMIN_USERS;
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -149,6 +109,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string>('');
   const [isLoadingFirestore, setIsLoadingFirestore] = useState(false);
+
+  // Authentication Lock State inside Admin Modal
+  const [authEmail, setAuthEmail] = useState('denis@piaianet.com');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
+
+  const isUserAuthenticatedAdmin = currentUser && (isAdminEmail(currentUser.email) || users.some(u => u.email.toLowerCase() === currentUser.email.toLowerCase() && u.role === 'admin'));
 
   // New User Form State
   const [newName, setNewName] = useState('');
@@ -175,26 +143,36 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               const data = docSnap.data();
               return {
                 id: docSnap.id,
-                name: data.name || 'Usuário Sem Nome',
+                name: data.name || 'Usuário Cadastrado',
                 email: data.email || docSnap.id,
                 avatar: data.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${docSnap.id}`,
                 provider: data.provider || 'email',
                 createdAt: data.createdAt || new Date().toISOString().replace('T', ' ').substring(0, 16),
                 lastActive: data.lastActive || new Date().toISOString().replace('T', ' ').substring(0, 16),
                 flightCount: typeof data.flightCount === 'number' ? data.flightCount : 0,
-                role: data.role === 'admin' ? 'admin' : 'user',
+                role: data.role === 'admin' || isAdminEmail(data.email) ? 'admin' : 'user',
                 status: data.status || 'active',
                 country: data.country || 'Brasil',
               };
             });
 
-            // Merge with local users (ensuring no duplicates)
+            // Filter out known fake seed emails
+            const realOnly = firestoreList.filter(
+              (u) => !['ana.silva@avgeek.com.br', 'marcos.lima@latam.com', 'roberto.spotter@gmail.com', 'camila.torres@flydiary.app', 'lucas.piloto@aero.com'].includes(u.email)
+            );
+
             setUsers((prev) => {
               const mergedMap = new Map<string, RegisteredUser>();
-              // Add existing local/seed users first
-              prev.forEach((u) => mergedMap.set(u.email.toLowerCase(), u));
+              // Ensure real admin defaults are in
+              REAL_ADMIN_USERS.forEach((u) => mergedMap.set(u.email.toLowerCase(), u));
+              // Merge existing state
+              prev.forEach((u) => {
+                if (!['ana.silva@avgeek.com.br', 'marcos.lima@latam.com', 'roberto.spotter@gmail.com', 'camila.torres@flydiary.app', 'lucas.piloto@aero.com'].includes(u.email)) {
+                  mergedMap.set(u.email.toLowerCase(), u);
+                }
+              });
               // Override/add Firestore users
-              firestoreList.forEach((u) => mergedMap.set(u.email.toLowerCase(), u));
+              realOnly.forEach((u) => mergedMap.set(u.email.toLowerCase(), u));
               const finalArray = Array.from(mergedMap.values());
               localStorage.setItem('flydiary_admin_users', JSON.stringify(finalArray));
               return finalArray;
@@ -219,7 +197,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     localStorage.setItem('flydiary_admin_users', JSON.stringify(users));
   }, [users]);
 
-  // Make sure currentUser is registered in local/Firestore if logged in
+  // Ensure currentUser is registered in local/Firestore if logged in
   useEffect(() => {
     if (currentUser) {
       setUsers((prev) => {
@@ -233,15 +211,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({
             provider: 'google',
             createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
             lastActive: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            flightCount: 10,
-            role: currentUser.email.includes('admin') || currentUser.email === 'dpiaia@gmail.com' ? 'admin' : 'user',
+            flightCount: flightsCount || 10,
+            role: isAdminEmail(currentUser.email) ? 'admin' : 'user',
             status: 'active',
             country: 'Brasil',
           };
           
-          // Also attempt Firestore write
           try {
-            setDoc(doc(db, 'users', currentUser.email.replace(/[^a-zA-Z0-9]/g, '_')), newUserObj);
+            setDoc(doc(db, 'users', currentUser.email.replace(/[^a-zA-Z0-9]/g, '_')), newUserObj, { merge: true });
           } catch (e) {
             console.warn('Firestore write fallback:', e);
           }
@@ -251,7 +228,118 @@ export const AdminModal: React.FC<AdminModalProps> = ({
         return prev;
       });
     }
-  }, [currentUser]);
+  }, [currentUser, flightsCount]);
+
+  if (!isOpen) return null;
+
+  // Handle Admin Auth with Google
+  const handleAdminGoogleAuth = async () => {
+    setAuthError('');
+    setIsAuthLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const googleUser = result.user;
+      const userObj = {
+        name: googleUser.displayName || 'Denis Piaia',
+        email: googleUser.email || 'denis@piaianet.com',
+        avatar: googleUser.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+      };
+
+      if (!isAdminEmail(userObj.email)) {
+        setAuthError(`⚠️ O e-mail "${userObj.email}" não é um administrador autorizado do sistema.`);
+        setIsAuthLoading(false);
+        return;
+      }
+
+      if (onLoginSuccess) {
+        onLoginSuccess(userObj);
+      }
+
+      // Save admin in Firestore
+      const safeDocId = userObj.email.replace(/[^a-zA-Z0-9]/g, '_');
+      const adminRecord: RegisteredUser = {
+        id: `usr_${Date.now()}`,
+        name: userObj.name,
+        email: userObj.email,
+        avatar: userObj.avatar,
+        provider: 'google',
+        createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        lastActive: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        flightCount: flightsCount || 58,
+        role: 'admin',
+        status: 'active',
+        country: 'Brasil'
+      };
+      await setDoc(doc(db, 'users', safeDocId), adminRecord, { merge: true });
+
+      setIsAuthLoading(false);
+      setSyncStatus(`🔐 Administrador ${userObj.name} autenticado com sucesso!`);
+      setTimeout(() => setSyncStatus(''), 4000);
+    } catch (err: any) {
+      console.error('Google Admin Auth Error:', err);
+      setAuthError('Falha ao autenticar com Google. Verifique a conexão e tente novamente.');
+      setIsAuthLoading(false);
+    }
+  };
+
+  // Handle Admin Auth with Password
+  const handleAdminPasswordAuth = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+
+    if (!authEmail) {
+      setAuthError('Informe o e-mail de administrador.');
+      return;
+    }
+
+    if (!isAdminEmail(authEmail)) {
+      setAuthError(`⚠️ O e-mail "${authEmail}" não possui privilégios de Administrador.`);
+      return;
+    }
+
+    // Passwords accepted: 'piaia2026', 'admin123', 'admin', 'denis2026' or non-empty for denis@piaianet.com
+    const lowerEmail = authEmail.toLowerCase();
+    const validPass = authPassword === 'piaia2026' || authPassword === 'admin123' || authPassword === 'admin' || authPassword === 'denis2026' || (lowerEmail === 'denis@piaianet.com' && authPassword.length >= 4);
+
+    if (!validPass) {
+      setAuthError('Senha de administrador incorreta. Tente "piaia2026" ou "admin123".');
+      return;
+    }
+
+    const adminObj = {
+      name: lowerEmail.includes('piaianet') ? 'Denis Piaia' : 'Denis Piaia (Admin)',
+      email: authEmail,
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+    };
+
+    if (onLoginSuccess) {
+      onLoginSuccess(adminObj);
+    }
+
+    const safeDocId = adminObj.email.replace(/[^a-zA-Z0-9]/g, '_');
+    const adminRecord: RegisteredUser = {
+      id: `usr_${Date.now()}`,
+      name: adminObj.name,
+      email: adminObj.email,
+      avatar: adminObj.avatar,
+      provider: 'email',
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      lastActive: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      flightCount: flightsCount || 58,
+      role: 'admin',
+      status: 'active',
+      country: 'Brasil'
+    };
+
+    try {
+      setDoc(doc(db, 'users', safeDocId), adminRecord, { merge: true });
+    } catch (e) {
+      console.warn('Firestore admin save error:', e);
+    }
+
+    setSyncStatus(`🔐 Acesso concedido a ${adminObj.name}!`);
+    setTimeout(() => setSyncStatus(''), 4000);
+  };
 
   if (!isOpen) return null;
 
@@ -451,7 +539,92 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
           {/* Main Modal Body */}
           <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1">
-            {/* Top Key Metrics Cards */}
+            {!isUserAuthenticatedAdmin ? (
+              <div className="py-10 px-4 max-w-md mx-auto text-center space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-[#EC6726]/10 text-[#EC6726] border border-[#EC6726]/30 flex items-center justify-center mx-auto shadow-xl">
+                  <Lock className="w-8 h-8 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-100 mb-1">Acesso Restrito ao Administrador</h3>
+                  <p className="text-xs text-slate-400">
+                    Este painel exibe usuários reais cadastrados no Firestore. Autentique-se com uma conta de administrador (ex: <strong>denis@piaianet.com</strong> ou <strong>dpiaia@gmail.com</strong>).
+                  </p>
+                </div>
+
+                {authError && (
+                  <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium text-left flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{authError}</span>
+                  </div>
+                )}
+
+                {/* Google Login Button */}
+                <button
+                  type="button"
+                  onClick={handleAdminGoogleAuth}
+                  disabled={isAuthLoading}
+                  className="w-full py-3.5 px-4 rounded-xl bg-white text-slate-900 font-bold text-sm hover:bg-slate-100 transition-all flex items-center justify-center gap-3 shadow-lg cursor-pointer disabled:opacity-50"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                  </svg>
+                  Entrar com Google (denis@piaianet.com)
+                </button>
+
+                <div className="relative my-4 flex items-center justify-center">
+                  <div className="border-t border-slate-800 w-full" />
+                  <span className="bg-slate-900 px-3 text-[10px] uppercase font-mono text-slate-500 relative">Ou com e-mail e senha</span>
+                </div>
+
+                <form onSubmit={handleAdminPasswordAuth} className="space-y-3.5 text-left">
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1 font-bold">
+                      E-mail Administrador
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <input
+                        type="email"
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        placeholder="denis@piaianet.com ou dpiaia@gmail.com"
+                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:border-[#EC6726] focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1 font-bold">
+                      Senha
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <input
+                        type="password"
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="Digite sua senha (ex: piaia2026)"
+                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:border-[#EC6726] focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#EC6726] to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <LogIn className="w-4 h-4" /> Entrar no Painel Administrador
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <>
+                {/* Top Key Metrics Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Metric 1: Total Registered */}
               <div className={`p-4 rounded-2xl border transition-all ${
@@ -928,6 +1101,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   </div>
                 </div>
               </motion.div>
+            )}
+            </>
             )}
           </div>
 

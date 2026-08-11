@@ -297,6 +297,11 @@ export default function App() {
         onClose={() => setIsAdminModalOpen(false)}
         isDarkMode={isDarkMode}
         currentUser={currentUser}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setUserProfile((prev) => ({ ...prev, name: user.name, email: user.email }));
+        }}
+        flightsCount={flights.length}
       />
     </div>
   );
