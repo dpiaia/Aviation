@@ -1,7 +1,7 @@
 // Dual-Source Aviation Photo Service (Planespotters.net + JetPhotos.com)
 // Integrates unofficial JetPhotos API (https://jetphotos-api-docs.vercel.app) & Planespotters API
 
-export type AviationPhotoSource = 'jetphotos' | 'planespotters' | 'curated';
+export type AviationPhotoSource = 'jetphotos' | 'planespotters' | 'unsplash' | 'pexels' | 'curated';
 
 export interface AviationPhoto {
   id: string;
@@ -331,8 +331,27 @@ export async function fetchAirportPhotos(
 
   const jetPhotosList: AviationPhoto[] = [];
   const planespottersList: AviationPhoto[] = [];
+  const unsplashPexelsList: AviationPhoto[] = [];
 
-  // 1. Query JetPhotos for Airport / Location
+  // 1. Query Unsplash & Pexels backend proxy
+  try {
+    const apiRes = await fetch(
+      `/api/photos/airport?code=${encodeURIComponent(cleanCode)}&name=${encodeURIComponent(
+        airportName
+      )}`,
+      { signal }
+    );
+    if (apiRes.ok) {
+      const apiData = await apiRes.json();
+      if (Array.isArray(apiData.photos) && apiData.photos.length > 0) {
+        unsplashPexelsList.push(...apiData.photos);
+      }
+    }
+  } catch {
+    // Ignore and proceed to JetPhotos / Planespotters
+  }
+
+  // 2. Query JetPhotos for Airport / Location
   const jetPhotosEndpoints = [
     `https://jetphotos-api.workers.dev/?page=1&sort-order=1&keywords=${encodeURIComponent(
       cleanCode
@@ -414,11 +433,25 @@ export async function fetchAirportPhotos(
   });
 
   // Interleave and alternate between JetPhotos and Planespotters
-  const interleaved = interleaveAndRandomizePhotos(planespottersList, jetPhotosList);
+  const spotterInterleaved = interleaveAndRandomizePhotos(planespottersList, jetPhotosList);
+
+  // Combine Unsplash/Pexels with Spotter photos (alternating smoothly)
+  const combinedAll: AviationPhoto[] = [];
+  const maxCombined = Math.max(unsplashPexelsList.length, spotterInterleaved.length);
+  for (let i = 0; i < maxCombined; i++) {
+    if (i < spotterInterleaved.length && spotterInterleaved[i]) {
+      combinedAll.push(spotterInterleaved[i]);
+    }
+    if (i < unsplashPexelsList.length && unsplashPexelsList[i]) {
+      combinedAll.push(unsplashPexelsList[i]);
+    }
+  }
+
+  const finalPool = combinedAll.length > 0 ? combinedAll : spotterInterleaved;
 
   // Deduplicate
   const seenUrls = new Set<string>();
-  const deduplicated = interleaved.filter((p) => {
+  const deduplicated = finalPool.filter((p) => {
     if (!p.url || seenUrls.has(p.url)) return false;
     seenUrls.add(p.url);
     return true;

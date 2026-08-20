@@ -425,6 +425,10 @@ export const AirportDetailsModal: React.FC<AirportDetailsModalProps> = ({
                               ? 'bg-amber-950/85 text-amber-300 border-amber-400/60'
                               : airportPhotos[currentPhotoIdx]?.source === 'planespotters'
                               ? 'bg-cyan-950/85 text-cyan-300 border-cyan-400/60'
+                              : airportPhotos[currentPhotoIdx]?.source === 'unsplash'
+                              ? 'bg-emerald-950/85 text-emerald-300 border-emerald-400/60'
+                              : airportPhotos[currentPhotoIdx]?.source === 'pexels'
+                              ? 'bg-teal-950/85 text-teal-300 border-teal-400/60'
                               : 'bg-slate-950/85 text-slate-200 border-slate-700'
                           }`}
                         >

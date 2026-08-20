@@ -131,6 +131,92 @@ async function startServer() {
     }
   });
 
+  // Unsplash & Pexels Photo API Proxy for Airports & Aviation
+  app.get('/api/photos/airport', async (req, res) => {
+    const { code, name, city } = req.query;
+    const unsplashKey = process.env.UNSPLASH_ACCESS_KEY?.trim();
+    const pexelsKey = process.env.PEXELS_API_KEY?.trim();
+
+    const photos: any[] = [];
+    const searchTerms = [
+      `${code} airport`,
+      `${name} airport`,
+      `${city} airport terminal`,
+      `airplane runway ${code || ''}`,
+    ].filter(Boolean);
+
+    const primaryQuery = `${name || code || 'airport'} aviation`;
+
+    // 1. Fetch from Unsplash if key is present
+    if (unsplashKey) {
+      try {
+        const unsplashUrl = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
+          primaryQuery
+        )}&per_page=8&orientation=landscape&client_id=${unsplashKey}`;
+        const uRes = await fetch(unsplashUrl);
+        if (uRes.ok) {
+          const uData = await uRes.json();
+          if (Array.isArray(uData.results)) {
+            for (const item of uData.results) {
+              photos.push({
+                id: `unsplash-${item.id}`,
+                url: item.urls?.regular || item.urls?.full || item.urls?.small,
+                thumbnailUrl: item.urls?.small || item.urls?.thumb,
+                source: 'unsplash',
+                sourceLabel: 'Unsplash',
+                photographer: item.user?.name || 'Unsplash Contributor',
+                link: item.links?.html || `https://unsplash.com/photos/${item.id}`,
+                airportCode: code,
+                airportName: name,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching from Unsplash:', err);
+      }
+    }
+
+    // 2. Fetch from Pexels if key is present
+    if (pexelsKey) {
+      try {
+        const pexelsUrl = `https://api.pexels.com/v1/search?query=${encodeURIComponent(
+          primaryQuery
+        )}&per_page=8&orientation=landscape`;
+        const pRes = await fetch(pexelsUrl, {
+          headers: { Authorization: pexelsKey },
+        });
+        if (pRes.ok) {
+          const pData = await pRes.json();
+          if (Array.isArray(pData.photos)) {
+            for (const item of pData.photos) {
+              photos.push({
+                id: `pexels-${item.id}`,
+                url: item.src?.large2x || item.src?.large || item.src?.medium,
+                thumbnailUrl: item.src?.medium || item.src?.small,
+                source: 'pexels',
+                sourceLabel: 'Pexels',
+                photographer: item.photographer || 'Pexels Photographer',
+                link: item.url,
+                airportCode: code,
+                airportName: name,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching from Pexels:', err);
+      }
+    }
+
+    return res.json({
+      photos,
+      count: photos.length,
+      hasUnsplashKey: Boolean(unsplashKey),
+      hasPexelsKey: Boolean(pexelsKey),
+    });
+  });
+
   // Vite development middleware vs Static Production
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

@@ -145,6 +145,10 @@ export const AviationCard: React.FC<AviationCardProps> = ({
     ? { label: 'JetPhotos', color: 'text-amber-300 border-amber-400/50 bg-amber-950/80' }
     : activePhotoMeta?.source === 'planespotters'
     ? { label: 'Planespotters', color: 'text-cyan-300 border-cyan-400/50 bg-cyan-950/80' }
+    : activePhotoMeta?.source === 'unsplash'
+    ? { label: 'Unsplash', color: 'text-emerald-300 border-emerald-400/50 bg-emerald-950/80' }
+    : activePhotoMeta?.source === 'pexels'
+    ? { label: 'Pexels', color: 'text-teal-300 border-teal-400/50 bg-teal-950/80' }
     : { label: card.registration ? `Matrícula ${card.registration}` : card.airportCode ? `Aeroporto ${card.airportCode}` : 'Foto Real', color: 'text-slate-300 border-slate-700 bg-slate-950/80' };
 
   const getCategoryIcon = (cat: CardCategory) => {
