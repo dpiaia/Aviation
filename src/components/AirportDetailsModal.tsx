@@ -17,8 +17,14 @@ import {
   PlaneTakeoff,
   QrCode,
   Sparkles,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  User,
 } from 'lucide-react';
 import { AirportDetail, fetchAirportDetails } from '../utils/airportDb';
+import { AviationPhoto, fetchAirportPhotos } from '../utils/aviationPhotos';
 
 interface AirportDetailsModalProps {
   airportQuery: string | null; // e.g. "VCP", "SBKP", "Campinas / Viracopos (VCP/SBKP)"
@@ -33,6 +39,9 @@ export const AirportDetailsModal: React.FC<AirportDetailsModalProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [searchVal, setSearchVal] = useState<string>('');
+  const [airportPhotos, setAirportPhotos] = useState<AviationPhoto[]>([]);
+  const [currentPhotoIdx, setCurrentPhotoIdx] = useState<number>(0);
+  const [loadingPhotos, setLoadingPhotos] = useState<boolean>(false);
 
   useEffect(() => {
     if (!airportQuery) return;
@@ -44,6 +53,21 @@ export const AirportDetailsModal: React.FC<AirportDetailsModalProps> = ({
         setAirport(data);
         setSearchVal(`${data.iata} / ${data.icao}`);
         setLoading(false);
+
+        // Fetch airport photos from JetPhotos + Planespotters
+        setLoadingPhotos(true);
+        const controller = new AbortController();
+        fetchAirportPhotos(data.iata || data.icao, data.name, controller.signal)
+          .then((photos) => {
+            if (isMounted && photos && photos.length > 0) {
+              setAirportPhotos(photos);
+              setCurrentPhotoIdx(0);
+            }
+          })
+          .catch(() => {})
+          .finally(() => {
+            if (isMounted) setLoadingPhotos(false);
+          });
       }
     });
 
@@ -59,6 +83,12 @@ export const AirportDetailsModal: React.FC<AirportDetailsModalProps> = ({
     fetchAirportDetails(searchVal).then((data) => {
       setAirport(data);
       setLoading(false);
+      setLoadingPhotos(true);
+      fetchAirportPhotos(data.iata || data.icao, data.name).then((photos) => {
+        setAirportPhotos(photos || []);
+        setCurrentPhotoIdx(0);
+        setLoadingPhotos(false);
+      });
     });
   };
 
@@ -322,6 +352,114 @@ export const AirportDetailsModal: React.FC<AirportDetailsModalProps> = ({
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Real Airport Photography Section (JetPhotos & Planespotters) */}
+                <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-2">
+                      <Camera className="w-4 h-4 text-blue-600" />
+                      <h4 className="text-xs font-mono font-extrabold uppercase tracking-wider text-slate-700">
+                        Galeria Real do Aeroporto
+                      </h4>
+                      <span className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-600 text-[9.5px] font-mono font-bold">
+                        JetPhotos & Planespotters
+                      </span>
+                    </div>
+
+                    {airportPhotos.length > 1 && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCurrentPhotoIdx(
+                              (prev) => (prev - 1 + airportPhotos.length) % airportPhotos.length
+                            )
+                          }
+                          className="p-1 rounded-lg hover:bg-slate-100 text-slate-600 cursor-pointer transition-colors"
+                          title="Foto anterior"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <span className="text-[10px] font-mono text-slate-500 font-bold">
+                          {currentPhotoIdx + 1}/{airportPhotos.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setCurrentPhotoIdx((prev) => (prev + 1) % airportPhotos.length)
+                          }
+                          className="p-1 rounded-lg hover:bg-slate-100 text-slate-600 cursor-pointer transition-colors"
+                          title="Próxima foto"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {loadingPhotos ? (
+                    <div className="h-44 bg-slate-900 rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400">
+                      <RefreshCw className="w-5 h-5 animate-spin text-amber-400" />
+                      <span className="text-xs font-mono">Buscando fotos no JetPhotos...</span>
+                    </div>
+                  ) : airportPhotos.length > 0 ? (
+                    <div className="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800 shadow-md group">
+                      <img
+                        src={airportPhotos[currentPhotoIdx]?.url}
+                        alt={`${airport.name} photo`}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-52 sm:h-64 object-cover group-hover:scale-102 transition-transform duration-500"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          target.src =
+                            'https://images.unsplash.com/photo-1542296332-2e4473faf563?auto=format&fit=crop&w=800&q=80';
+                        }}
+                      />
+
+                      {/* Source Badge */}
+                      <div className="absolute top-2 left-2 flex items-center gap-1 z-10">
+                        <div
+                          className={`px-2.5 py-1 rounded-full border text-[10px] font-mono font-bold backdrop-blur-md flex items-center gap-1 shadow-md ${
+                            airportPhotos[currentPhotoIdx]?.source === 'jetphotos'
+                              ? 'bg-amber-950/85 text-amber-300 border-amber-400/60'
+                              : airportPhotos[currentPhotoIdx]?.source === 'planespotters'
+                              ? 'bg-cyan-950/85 text-cyan-300 border-cyan-400/60'
+                              : 'bg-slate-950/85 text-slate-200 border-slate-700'
+                          }`}
+                        >
+                          <Camera className="w-3 h-3" />
+                          <span>{airportPhotos[currentPhotoIdx]?.sourceLabel}</span>
+                        </div>
+                      </div>
+
+                      {/* Photographer Info & Links */}
+                      <div className="absolute bottom-2 inset-x-2 flex items-center justify-between z-10">
+                        <div className="px-2.5 py-1 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-[10px] font-mono text-slate-300 flex items-center gap-1">
+                          <User className="w-3 h-3 text-slate-400" />
+                          <span>
+                            Fotógrafo: <strong className="text-white">{airportPhotos[currentPhotoIdx]?.photographer}</strong>
+                          </span>
+                        </div>
+
+                        {airportPhotos[currentPhotoIdx]?.link && (
+                          <a
+                            href={airportPhotos[currentPhotoIdx]?.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1 rounded-lg bg-slate-950/85 hover:bg-blue-600 hover:text-white backdrop-blur-md border border-slate-800 text-[10px] font-mono text-blue-400 flex items-center gap-1 transition-colors"
+                          >
+                            <span>Ver no site</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-xs font-mono text-slate-500 bg-slate-50 rounded-xl">
+                      Nenhuma foto de spotter disponível no momento para este aeroporto.
+                    </div>
+                  )}
                 </div>
 
                 {/* Summary text if available */}

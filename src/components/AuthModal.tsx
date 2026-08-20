@@ -8,7 +8,7 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: { name: string; email: string; avatar?: string } | null;
-  onLoginSuccess: (user: { name: string; email: string; avatar?: string }) => void;
+  onLoginSuccess: (user: { name: string; email: string; avatar?: string }, isNewRegistration?: boolean) => void;
   onLogout: () => void;
   isDarkMode?: boolean;
 }
@@ -119,38 +119,96 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     saveUserRecord(userObj, 'email');
 
     setTimeout(() => {
-      onLoginSuccess(userObj);
+      onLoginSuccess(userObj, isRegister);
       setStatusMsg('');
       onClose();
     }, 500);
   };
 
   const handleGoogleLogin = async () => {
-    setStatusMsg('Iniciando Login com Google...');
+    setStatusMsg('Conectando ao Google...');
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+
+      const userEmail = (user.email || '').toLowerCase().trim();
+      const userName = user.displayName || (userEmail ? userEmail.split('@')[0] : 'Usuário Google');
+      const userAvatar = user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userEmail || 'fly')}`;
+
       const userObj = {
-        name: user.displayName || 'Usuário Google',
-        email: user.email || 'usuario@gmail.com',
-        avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.email || 'fly')}`,
+        name: userName,
+        email: userEmail || 'usuario.google@gmail.com',
+        avatar: userAvatar,
       };
-      saveUserRecord(userObj, 'google');
-      onLoginSuccess(userObj);
-      setStatusMsg('');
-      onClose();
+
+      let isNewRegistration = false;
+      try {
+        const savedAccountsStr = localStorage.getItem('flydiary_registered_accounts');
+        const accountsMap: Record<string, { name: string; email: string }> = savedAccountsStr
+          ? JSON.parse(savedAccountsStr)
+          : {};
+
+        if (!accountsMap[userEmail]) {
+          isNewRegistration = true;
+          accountsMap[userEmail] = {
+            name: userName,
+            email: userEmail,
+          };
+          localStorage.setItem('flydiary_registered_accounts', JSON.stringify(accountsMap));
+        }
+      } catch (e) {
+        console.warn('Error checking google account registration:', e);
+      }
+
+      await saveUserRecord(userObj, 'google');
+      setStatusMsg('Login com Google efetuado com sucesso!');
+      setTimeout(() => {
+        onLoginSuccess(userObj, isNewRegistration);
+        setStatusMsg('');
+        onClose();
+      }, 400);
+
     } catch (err: any) {
-      console.warn('Google popup error, falling back to local session:', err);
-      // Fallback in case popup is restricted inside iframe preview
-      const fallbackUser = {
-        name: 'Piloto FlyDiary (Google)',
-        email: email || 'usuario.google@flydiary.app',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-      };
-      saveUserRecord(fallbackUser, 'google');
-      onLoginSuccess(fallbackUser);
-      setStatusMsg('');
-      onClose();
+      console.warn('Google popup auth result/error:', err);
+
+      if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+        setStatusMsg('Login com Google cancelado pelo usuário.');
+        setTimeout(() => setStatusMsg(''), 2500);
+        return;
+      }
+
+      // If Google popup fails (e.g. iframe popup restrictions in preview)
+      if (email) {
+        const userEmail = email.toLowerCase().trim();
+        const userName = name.trim() || userEmail.split('@')[0];
+        const userObj = {
+          name: userName,
+          email: userEmail,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userEmail)}`,
+        };
+
+        let isNewRegistration = false;
+        try {
+          const savedAccountsStr = localStorage.getItem('flydiary_registered_accounts');
+          const accountsMap: Record<string, { name: string; email: string }> = savedAccountsStr
+            ? JSON.parse(savedAccountsStr)
+            : {};
+          if (!accountsMap[userEmail]) {
+            isNewRegistration = true;
+            accountsMap[userEmail] = { name: userName, email: userEmail };
+            localStorage.setItem('flydiary_registered_accounts', JSON.stringify(accountsMap));
+          }
+        } catch (e) {
+          console.warn('Fallback google accounts map check error:', e);
+        }
+
+        await saveUserRecord(userObj, 'google');
+        onLoginSuccess(userObj, isNewRegistration);
+        setStatusMsg('');
+        onClose();
+      } else {
+        setStatusMsg('Para entrar via Google, selecione sua conta ou preencha seu e-mail abaixo.');
+      }
     }
   };
 

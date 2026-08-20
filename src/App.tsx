@@ -16,6 +16,7 @@ import { ImportCsvModal } from './components/ImportCsvModal';
 import { AirportDetailsModal } from './components/AirportDetailsModal';
 import { AdminModal } from './components/AdminModal';
 import { VirtualAlbumPage } from './components/VirtualAlbumPage';
+import { WelcomeModal } from './components/WelcomeModal';
 import { DottedWorldMapBackground } from './components/DottedWorldMapBackground';
 import { LiveDeparturesBoard } from './components/LiveDeparturesBoard';
 import { INITIAL_FLIGHTS } from './data/initialFlights';
@@ -24,7 +25,7 @@ import { Flight, UserProfile } from './types';
 const isDenisUser = (email?: string) => {
   if (!email) return false;
   const lower = email.toLowerCase().trim();
-  return lower === 'denis@piaianet.com' || lower === 'dpiaia@gmail.com' || lower.includes('denis');
+  return lower === 'denis@piaianet.com';
 };
 
 const getUserFlightsKey = (email?: string) => {
@@ -90,6 +91,7 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState<boolean>(false);
   const [selectedAirportModal, setSelectedAirportModal] = useState<string | null>(null);
@@ -383,6 +385,8 @@ export default function App() {
             <VirtualAlbumPage
               isDarkMode={isDarkMode}
               flightsCount={flights.length}
+              flights={flights}
+              userEmail={currentUser?.email || userProfile.email}
               onBackToDashboard={() => setView('dashboard')}
             />
           ) : (
@@ -504,13 +508,35 @@ export default function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         currentUser={currentUser}
-        onLoginSuccess={(user) => {
+        onLoginSuccess={(user, isNewRegistration) => {
           setCurrentUser(user);
-          setUserProfile((prev) => ({ ...prev, name: user.name, email: user.email }));
+          setUserProfile((prev) => ({
+            ...prev,
+            name: user.name,
+            email: user.email,
+            username: user.email.split('@')[0],
+          }));
           setView('dashboard');
+
+          if (isNewRegistration) {
+            const flightsKey = getUserFlightsKey(user.email);
+            localStorage.setItem(flightsKey, '[]');
+            setFlights([]);
+            setIsWelcomeModalOpen(true);
+          }
         }}
         onLogout={() => setCurrentUser(null)}
         isDarkMode={isDarkMode}
+      />
+
+      <WelcomeModal
+        isOpen={isWelcomeModalOpen}
+        userName={currentUser?.name || userProfile.name}
+        isDarkMode={isDarkMode}
+        onClose={() => setIsWelcomeModalOpen(false)}
+        onAddFlight={() => setIsAddModalOpen(true)}
+        onImportCsv={() => setIsImportModalOpen(true)}
+        onLoadSampleData={() => setFlights(INITIAL_FLIGHTS)}
       />
 
       <ProfileShareModal

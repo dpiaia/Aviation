@@ -15,6 +15,8 @@ import { Flight } from '../types';
 import { getAirlineLogo } from '../utils/airlineLogos';
 import { AirlineLogo } from './AirlineLogo';
 import { parseAirportCodes } from '../utils/airportDb';
+import { AircraftPhotoModal } from './AircraftPhotoModal';
+import { Camera } from 'lucide-react';
 
 interface FlightLogTableProps {
   flights: Flight[];
@@ -27,6 +29,7 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
   const [selectedAirline, setSelectedAirline] = useState('ALL');
   const [selectedYear, setSelectedYear] = useState('ALL');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPhotoFlight, setSelectedPhotoFlight] = useState<Flight | null>(null);
   const itemsPerPage = 10;
 
   // Distinct airlines
@@ -274,9 +277,15 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
                         {f.aircraft}
                       </span>
                       {f.registration && (
-                        <span className="px-1.5 py-0.5 rounded bg-blue-600/10 text-blue-400 text-[10px] font-mono border border-blue-500/20">
-                          {f.registration}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPhotoFlight(f)}
+                          className="px-1.5 py-0.5 rounded bg-blue-600/20 hover:bg-amber-500/20 text-blue-400 hover:text-amber-300 text-[10px] font-mono border border-blue-500/30 hover:border-amber-500/40 transition-all flex items-center gap-1 cursor-pointer"
+                          title="Ver fotos reais desta matrícula no JetPhotos e Planespotters"
+                        >
+                          <Camera className="w-2.5 h-2.5" />
+                          <span>{f.registration}</span>
+                        </button>
                       )}
                     </div>
                   </td>
@@ -340,6 +349,17 @@ export const FlightLogTable: React.FC<FlightLogTableProps> = ({ flights, onSelec
           </button>
         </div>
       </div>
+
+      {/* Dual Source Aircraft Photo Modal (JetPhotos + Planespotters) */}
+      {selectedPhotoFlight && (
+        <AircraftPhotoModal
+          isOpen={!!selectedPhotoFlight}
+          onClose={() => setSelectedPhotoFlight(null)}
+          registration={selectedPhotoFlight.registration}
+          aircraftModel={selectedPhotoFlight.aircraft}
+          airline={selectedPhotoFlight.airline}
+        />
+      )}
     </motion.div>
   );
 };
