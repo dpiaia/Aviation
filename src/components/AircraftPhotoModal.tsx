@@ -17,6 +17,7 @@ import {
   fetchDualSourcePhotos,
   getCuratedFallbackPhoto,
 } from '../utils/aviationPhotos';
+import { fetchAircraftLivePosition, AdsbAircraft } from '../utils/adsb';
 
 interface AircraftPhotoModalProps {
   isOpen: boolean;
@@ -37,6 +38,8 @@ export const AircraftPhotoModal: React.FC<AircraftPhotoModalProps> = ({
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [filterSource, setFilterSource] = useState<'all' | 'jetphotos' | 'planespotters'>('all');
+  const [liveAircraft, setLiveAircraft] = useState<AdsbAircraft | null>(null);
+  const [isCheckingAdsb, setIsCheckingAdsb] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -52,7 +55,22 @@ export const AircraftPhotoModal: React.FC<AircraftPhotoModalProps> = ({
     }
 
     setLoading(true);
+    setIsCheckingAdsb(true);
     const controller = new AbortController();
+
+    // Check ADS-B live status in parallel
+    fetchAircraftLivePosition(cleanReg, controller.signal)
+      .then((res) => {
+        if (isMounted && res.airborne && res.aircraft) {
+          setLiveAircraft(res.aircraft);
+        } else {
+          setLiveAircraft(null);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setIsCheckingAdsb(false);
+      });
 
     fetchDualSourcePhotos(cleanReg, aircraftModel, airline, 'all', controller.signal)
       .then((fetched) => {
@@ -124,9 +142,16 @@ export const AircraftPhotoModal: React.FC<AircraftPhotoModalProps> = ({
                   <h3 className="text-base font-extrabold text-white">
                     {registration ? `Matrícula ${registration}` : 'Galeria da Aeronave'}
                   </h3>
-                  <span className="px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono font-bold">
-                    Dual Source API
-                  </span>
+                  {liveAircraft ? (
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-mono font-bold flex items-center gap-1 animate-pulse">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      EM VOO AGORA (ADS-B)
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-mono font-bold">
+                      Dual Source API
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-slate-400 font-mono">
                   {aircraftModel || 'Aeronave'} {airline ? `• ${airline}` : ''}
@@ -141,6 +166,22 @@ export const AircraftPhotoModal: React.FC<AircraftPhotoModalProps> = ({
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Live Telemetry Bar if detected on ADS-B */}
+          {liveAircraft && (
+            <div className="px-4 py-2 bg-emerald-950/70 border-b border-emerald-500/30 text-emerald-200 text-xs font-mono flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <span className="font-bold text-white flex items-center gap-1">
+                  <Plane className="w-3.5 h-3.5 text-emerald-400" />
+                  Voo: {liveAircraft.flight || registration}
+                </span>
+                <span>Altitude: <strong className="text-emerald-300">{liveAircraft.altitudeFt ? `${liveAircraft.altitudeFt} ft` : 'Em voo'}</strong></span>
+                {liveAircraft.groundSpeedKnots && <span>Velocidade: <strong className="text-cyan-300">{liveAircraft.groundSpeedKnots} kts</strong></span>}
+                {liveAircraft.trackDeg && <span>Proa: <strong className="text-amber-300">{liveAircraft.trackDeg}°</strong></span>}
+              </div>
+              <span className="text-[10px] text-emerald-400/80">ADS-B Exchange Telemetria</span>
+            </div>
+          )}
 
           {/* Source Tabs Selector */}
           <div className="px-4 py-2 bg-slate-950/40 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2">

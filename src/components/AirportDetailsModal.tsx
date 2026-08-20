@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { AirportDetail, fetchAirportDetails } from '../utils/airportDb';
 import { AviationPhoto, fetchAirportPhotos } from '../utils/aviationPhotos';
+import { AirportLiveRadar } from './AirportLiveRadar';
 
 interface AirportDetailsModalProps {
   airportQuery: string | null; // e.g. "VCP", "SBKP", "Campinas / Viracopos (VCP/SBKP)"
@@ -353,6 +354,17 @@ export const AirportDetailsModal: React.FC<AirportDetailsModalProps> = ({
                     ))}
                   </div>
                 </div>
+
+                {/* ADS-B Live Radar Traffic Section */}
+                {airport.lat && airport.lng && (
+                  <AirportLiveRadar
+                    airportIata={airport.iata}
+                    airportIcao={airport.icao}
+                    airportName={airport.name}
+                    lat={airport.lat}
+                    lng={airport.lng}
+                  />
+                )}
 
                 {/* Real Airport Photography Section (JetPhotos & Planespotters) */}
                 <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
